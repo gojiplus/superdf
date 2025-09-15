@@ -2,8 +2,8 @@ Package: superdf
 Title: Data Frames with Persistent Metadata
 Version: 0.1.0
 Authors@R: 
-    person("Soodoku", "Banerjee", 
-           email = "soodoku@gmail.com", 
+    person("Gaurav Sood", 
+           email = "contact@gsood.com", 
            role = c("aut", "cre"))
 Description: Extends R's data.frame to include persistent metadata (version, 
     author, notes) that survives data operations and input/output. SuperDataFrame
