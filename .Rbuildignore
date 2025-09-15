@@ -1,0 +1,11 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.git$
+^\.gitignore$
+^ecosystem_compatible_superdf\.py$
+^ecosystem_compatible_superdf\.R$
+^superdf\.ipynb$
+^superdf\.md$
+^superdf\.Rmd$
+^CLAUDE\.md$
+^python\$
