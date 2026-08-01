@@ -12,8 +12,8 @@
 #'
 #' @name superdf-package
 #' @aliases superdf
-#' @docType package
-NULL
+#' @keywords internal
+"_PACKAGE"
 
 # Metadata class ----
 new_metadata <- function(version = "", author = "", notes = "") {
