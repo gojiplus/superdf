@@ -390,7 +390,11 @@ as_superdf <- function(x, version = "", author = "", notes = "", metadata = NULL
 #'
 #' @param x A SuperDataFrame
 #' @param file File path
-#' @param ... Additional arguments passed to write.csv
+#' @param ... Additional arguments passed to [utils::write.table()]. As with
+#'   [utils::write.csv()], the CSV dialect is fixed: `append`, `col.names`,
+#'   `sep`, `dec` and `qmethod` are ignored with a warning.
+#'
+#' @return `file`, invisibly.
 #'
 #' @examples
 #' \dontrun{
@@ -405,31 +409,72 @@ write_superdf_csv <- function(x, file, ...) {
   }
 
   metadata_obj <- attr(x, "superdf_metadata")
+  dots <- list(...)
 
-  if (!is.null(file) && file != "") {
-    # Write metadata as header comments
-    cat("# SuperDataFrame Metadata\n", file = file)
+  # Mirror write.csv()'s fixed CSV dialect, but via write.table() so that the
+  # metadata header can be preserved: write.csv() discards `append`, which
+  # truncated the header that had just been written.
+  for (argname in c("append", "col.names", "sep", "dec", "qmethod")) {
+    if (argname %in% names(dots)) {
+      warning(gettextf("attempt to set '%s' ignored", argname), domain = NA)
+      dots[[argname]] <- NULL
+    }
+  }
+
+  row_names <- if ("row.names" %in% names(dots)) dots[["row.names"]] else TRUE
+  dots[["row.names"]] <- NULL
+  col_names <- if (is.logical(row_names) && length(row_names) == 1L &&
+    !row_names) {
+    TRUE
+  } else {
+    NA
+  }
+
+  write_header <- !is.null(file) && is.character(file) &&
+    length(file) == 1L && file != ""
+
+  # Write the header and the data through one connection we own, rather than
+  # asking write.table() to append; appending column names would warn.
+  target <- file
+  if (write_header) {
+    header <- "# SuperDataFrame Metadata"
     if (nchar(metadata_obj$version) > 0) {
-      cat("# Version:", metadata_obj$version, "\n", file = file, append = TRUE)
+      header <- c(header, paste("# Version:", metadata_obj$version))
     }
     if (nchar(metadata_obj$author) > 0) {
-      cat("# Author:", metadata_obj$author, "\n", file = file, append = TRUE)
+      header <- c(header, paste("# Author:", metadata_obj$author))
     }
     if (nchar(metadata_obj$notes) > 0) {
-      cat("# Notes:", metadata_obj$notes, "\n", file = file, append = TRUE)
+      header <- c(header, paste("# Notes:", metadata_obj$notes))
     }
-
-    # Write the actual data
-    utils::write.csv(as.data.frame(x), file = file, append = TRUE, ...)
-  } else {
-    utils::write.csv(as.data.frame(x), file = file, ...)
+    target <- base::file(file, "w")
+    on.exit(close(target), add = TRUE)
+    writeLines(header, con = target)
   }
+
+  do.call(
+    utils::write.table,
+    c(
+      list(
+        as.data.frame(x),
+        file = target,
+        sep = ",",
+        dec = ".",
+        qmethod = "double",
+        col.names = col_names,
+        row.names = row_names
+      ),
+      dots
+    )
+  )
+
+  invisible(file)
 }
 
 #' Read SuperDataFrame from CSV with metadata
 #'
 #' @param file File path
-#' @param ... Additional arguments passed to read.csv
+#' @param ... Additional arguments passed to [utils::read.csv()]
 #'
 #' @return A SuperDataFrame with metadata extracted from comments
 #'
@@ -444,6 +489,8 @@ read_superdf_csv <- function(file, ...) {
   version <- ""
   author <- ""
   notes <- ""
+  dots <- list(...)
+  lines <- character(0)
 
   # Try to read metadata from comments if file exists
   if (file.exists(file)) {
@@ -466,8 +513,27 @@ read_superdf_csv <- function(file, ...) {
     }
   }
 
+  # write.csv()-style output carries an empty leading header field holding the
+  # row names. Without row.names = 1 read.csv() turns it into a data column
+  # called "X", so the round trip would not return the columns that were written.
+  if (!"row.names" %in% names(dots) && !identical(dots[["header"]], FALSE)) {
+    data_lines <- lines[!grepl("^#", lines) & nzchar(lines)]
+    if (length(data_lines) > 0L) {
+      fields <- scan(
+        text = data_lines[1], what = "", sep = ",",
+        quiet = TRUE, blank.lines.skip = FALSE
+      )
+      if (length(fields) > 1L && !nzchar(fields[1])) {
+        dots[["row.names"]] <- 1L
+      }
+    }
+  }
+  if (!"comment.char" %in% names(dots)) {
+    dots[["comment.char"]] <- "#"
+  }
+
   # Read the data (skip comment lines)
-  data <- utils::read.csv(file, comment.char = "#", ...)
+  data <- do.call(utils::read.csv, c(list(file), dots))
 
   # Create SuperDataFrame with metadata
   SuperDataFrame(data, version = version, author = author, notes = notes)
