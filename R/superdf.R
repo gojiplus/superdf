@@ -15,6 +15,46 @@
 #' @keywords internal
 "_PACKAGE"
 
+# Metadata is written as `#` comment lines above the data, so a value
+# containing a newline would end the comment and have its remainder parsed as
+# CSV. A crafted `notes` could therefore inject a header row and change the
+# table that comes back:
+#
+#   notes = "ok\nx,y\n999,1000"  turned a 1x1 frame into a 3x2 one
+#
+# Escaped on write and restored on read, so the value round trips intact and
+# cannot terminate its own line.
+.escape_meta <- function(s) {
+  s <- gsub("\\", "\\\\", s, fixed = TRUE)
+  s <- gsub("\r", "\\r", s, fixed = TRUE)
+  gsub("\n", "\\n", s, fixed = TRUE)
+}
+
+.unescape_meta <- function(s) {
+  if (length(s) != 1L || is.na(s) || !nzchar(s)) {
+    return(s)
+  }
+  chars <- strsplit(s, "", fixed = TRUE)[[1]]
+  out <- character(length(chars))
+  n <- 0L
+  i <- 1L
+  # One left-to-right pass, so an escaped backslash is not re-read as the
+  # start of the next escape.
+  while (i <= length(chars)) {
+    if (identical(chars[i], "\\") && i < length(chars)) {
+      decoded <- switch(chars[i + 1L], n = "\n", r = "\r", "\\" = "\\", NULL)
+      if (is.null(decoded)) {
+        n <- n + 1L; out[n] <- chars[i]; i <- i + 1L
+      } else {
+        n <- n + 1L; out[n] <- decoded; i <- i + 2L
+      }
+    } else {
+      n <- n + 1L; out[n] <- chars[i]; i <- i + 1L
+    }
+  }
+  paste(out[seq_len(n)], collapse = "")
+}
+
 # Metadata class ----
 new_metadata <- function(version = "", author = "", notes = "") {
   structure(
@@ -439,13 +479,13 @@ write_superdf_csv <- function(x, file, ...) {
   if (write_header) {
     header <- "# SuperDataFrame Metadata"
     if (nchar(metadata_obj$version) > 0) {
-      header <- c(header, paste("# Version:", metadata_obj$version))
+      header <- c(header, paste("# Version:", .escape_meta(metadata_obj$version)))
     }
     if (nchar(metadata_obj$author) > 0) {
-      header <- c(header, paste("# Author:", metadata_obj$author))
+      header <- c(header, paste("# Author:", .escape_meta(metadata_obj$author)))
     }
     if (nchar(metadata_obj$notes) > 0) {
-      header <- c(header, paste("# Notes:", metadata_obj$notes))
+      header <- c(header, paste("# Notes:", .escape_meta(metadata_obj$notes)))
     }
     target <- base::file(file, "w")
     on.exit(close(target), add = TRUE)
@@ -503,13 +543,13 @@ read_superdf_csv <- function(file, ...) {
     notes_line <- comment_lines[grepl("Notes:", comment_lines)]
 
     if (length(version_line) > 0) {
-      version <- trimws(gsub("^#\\s*Version:\\s*", "", version_line[1]))
+      version <- .unescape_meta(trimws(gsub("^#\\s*Version:\\s*", "", version_line[1])))
     }
     if (length(author_line) > 0) {
-      author <- trimws(gsub("^#\\s*Author:\\s*", "", author_line[1]))
+      author <- .unescape_meta(trimws(gsub("^#\\s*Author:\\s*", "", author_line[1])))
     }
     if (length(notes_line) > 0) {
-      notes <- trimws(gsub("^#\\s*Notes:\\s*", "", notes_line[1]))
+      notes <- .unescape_meta(trimws(gsub("^#\\s*Notes:\\s*", "", notes_line[1])))
     }
   }
 
