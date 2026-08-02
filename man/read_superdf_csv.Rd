@@ -9,7 +9,7 @@ read_superdf_csv(file, ...)
 \arguments{
 \item{file}{File path}
 
-\item{...}{Additional arguments passed to read.csv}
+\item{...}{Additional arguments passed to \code{\link[utils:read.csv]{utils::read.csv()}}}
 }
 \value{
 A SuperDataFrame with metadata extracted from comments

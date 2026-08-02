@@ -11,7 +11,12 @@ write_superdf_csv(x, file, ...)
 
 \item{file}{File path}
 
-\item{...}{Additional arguments passed to write.csv}
+\item{...}{Additional arguments passed to \code{\link[utils:write.table]{utils::write.table()}}. As with
+\code{\link[utils:write.csv]{utils::write.csv()}}, the CSV dialect is fixed: \code{append}, \code{col.names},
+\code{sep}, \code{dec} and \code{qmethod} are ignored with a warning.}
+}
+\value{
+\code{file}, invisibly.
 }
 \description{
 Write SuperDataFrame to CSV with metadata
