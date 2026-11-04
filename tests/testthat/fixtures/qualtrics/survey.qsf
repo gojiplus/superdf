@@ -1,0 +1,71 @@
+{
+  "SurveyEntry": {
+    "SurveyID": "SV_SUPERDF_FIXTURE",
+    "SurveyName": "Synthetic import fixture"
+  },
+  "SurveyElements": [
+    {
+      "Element": "SQ",
+      "PrimaryAttribute": "QID1",
+      "Payload": {
+        "QuestionID": "QID1",
+        "QuestionType": "TE",
+        "Selector": "SL",
+        "QuestionText": "Outcome score"
+      }
+    },
+    {
+      "Element": "SQ",
+      "PrimaryAttribute": "QID2",
+      "Payload": {
+        "QuestionID": "QID2",
+        "QuestionType": "MC",
+        "Selector": "SAVR",
+        "QuestionText": "Would you recommend?",
+        "Choices": {
+          "1": {
+            "Display": "No"
+          },
+          "2": {
+            "Display": "Yes"
+          }
+        },
+        "RecodeValues": {
+          "1": "0",
+          "2": "1"
+        }
+      }
+    },
+    {
+      "Element": "SQ",
+      "PrimaryAttribute": "QID3",
+      "Payload": {
+        "QuestionID": "QID3",
+        "QuestionType": "TE",
+        "Selector": "FORM",
+        "QuestionText": "Comments",
+        "Choices": {
+          "1": {
+            "Display": "First item"
+          },
+          "2": {
+            "Display": "Second item"
+          }
+        }
+      }
+    },
+    {
+      "Element": "FL",
+      "Payload": {
+        "Flow": [
+          {
+            "Type": "Randomizer",
+            "FlowID": "FL_1",
+            "SubSet": 1,
+            "Flow": []
+          }
+        ]
+      }
+    }
+  ]
+}

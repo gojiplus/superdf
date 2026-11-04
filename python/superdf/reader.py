@@ -60,7 +60,45 @@ class ResearchData:
         variables = _index(ctx["variables"], "variable")
         sampling = _index(ctx["sampling"], "sampling")
         _index(ctx["weights"], "weight")
-        _index(ctx["assignments"], "assignment")
+        assignments = _index(ctx["assignments"], "assignment")
+        evidence = _index(ctx["evidence"], "evidence")
+        source_refs = list(ctx["roster"]["evidence"])
+        for record in (
+            ctx["variables"] + ctx["sampling"] + ctx["weights"] + ctx["assignments"]
+        ):
+            source_refs.extend(record["evidence"])
+        for variable in variables.values():
+            if variable["instrument"] is not None:
+                source_refs.append(variable["instrument"]["source"])
+        for issue in ctx["diagnostics"]:
+            source_refs.extend(issue["sources"])
+        _require(
+            all(ref in evidence for ref in source_refs), "Unknown evidence reference"
+        )
+        roster = ctx["roster"]
+        if roster["completeness"] == "asserted_complete":
+            _require(
+                bool(roster["source"].strip())
+                and roster["kind"] != "unknown"
+                and bool(roster["evidence"]),
+                "Complete roster assertions require a known kind, source, and evidence",
+            )
+            if roster["kind"] in ("sampled_units", "randomized_units"):
+                _require(
+                    roster["scope"] is not None,
+                    "Complete design roster requires a scope",
+                )
+        if roster["scope"] is not None:
+            if roster["kind"] == "randomized_units":
+                _require(
+                    roster["scope"] in assignments,
+                    "Randomized roster scope must reference an assignment",
+                )
+            else:
+                _require(
+                    roster["scope"] in sampling,
+                    "Sampling roster scope must reference a sampling declaration",
+                )
         columns = [v["column"] for v in variables.values()]
         _require(len(set(columns)) == len(columns), "Duplicate variable columns")
         _require(
@@ -207,7 +245,7 @@ def read_superdf(file: str | Path, max_bytes: int = 256 * 1024**2) -> ResearchDa
     """Read a bounded, integrity-checked ZIP/Parquet/JSON bundle.
 
     No files are extracted. SHA-256 verifies payload integrity, not scientific
-    truth or authenticity. Only schema version 0.2.0 is accepted.
+    truth or authenticity. Only schema version 0.3.0 is accepted.
     """
     expected = {"manifest.json", "context.json", "data.parquet", "roster.parquet"}
     with ZipFile(file) as archive:

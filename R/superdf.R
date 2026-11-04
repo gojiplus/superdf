@@ -136,6 +136,9 @@
 #' @param sampling List of sampling_spec declarations.
 #' @param weights List of weight_spec declarations.
 #' @param assignments List of assignment_spec declarations.
+#' @param roster A roster_spec. Ordinary imports default to unknown completeness.
+#' @param evidence List of evidence_spec source records.
+#' @param diagnostics List of analysis_issue records retaining import uncertainty.
 #' @return A superdf inheriting from data.frame, with its original roster attached.
 #' @export
 #' @examples
@@ -155,7 +158,10 @@ superdf <- function(
   variables = list(),
   sampling = list(),
   weights = list(),
-  assignments = list()
+  assignments = list(),
+  roster = roster_spec(),
+  evidence = list(),
+  diagnostics = list()
 ) {
   if (!is.data.frame(data)) {
     stop("data must be a data.frame.", call. = FALSE)
@@ -178,7 +184,7 @@ superdf <- function(
     variables[[i]]$storage <- .storage(data[[column]])
   }
   ctx <- list(
-    schema_version = "0.2.0",
+    schema_version = "0.3.0",
     dataset = list(
       id = dataset_id,
       version = version,
@@ -190,7 +196,10 @@ superdf <- function(
     sampling = .array(sampling),
     weights = .array(weights),
     assignments = .array(assignments),
-    history = list()
+    history = list(),
+    roster = roster,
+    evidence = .array(evidence),
+    diagnostics = .array(diagnostics)
   )
   x <- .new_superdf(data, ctx, data)
   validate_superdf(x)

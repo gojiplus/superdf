@@ -44,6 +44,19 @@ collect_study <- function(population, seed = 9001L) {
     "pupil",
     paste0("simulated_school_study_", seed),
     notes = paste("Collection seed", seed),
+    roster = roster_spec(
+      "randomized_units",
+      source = "Generated assignment roster before outcome collection",
+      completeness = "asserted_complete",
+      scope = "school_offer",
+      evidence = "assignment_roster"
+    ),
+    evidence = list(evidence_spec(
+      "assignment_roster",
+      "generated:assignment-roster",
+      producer = "SuperDF simulation",
+      description = "Full generated randomized roster; completeness asserted by generator"
+    )),
     sampling = list(sampling_spec(
       "school_sample",
       "320 pupils in 80 schools across two districts",

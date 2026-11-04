@@ -79,6 +79,19 @@ reference_workflows <- function() {
     keys = "id",
     unit = "pupil",
     dataset_id = "blocked_experiment",
+    roster = roster_spec(
+      "randomized_units",
+      source = "Generated assignment roster before outcome collection",
+      completeness = "asserted_complete",
+      scope = "offer_assignment",
+      evidence = "assignment_roster"
+    ),
+    evidence = list(evidence_spec(
+      "assignment_roster",
+      "generated:assignment-roster",
+      producer = "SuperDF simulation",
+      description = "Full generated randomized roster; completeness asserted by generator"
+    )),
     assignments = list(assignment_spec(
       "offer_assignment",
       "offer",

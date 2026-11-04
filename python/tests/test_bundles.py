@@ -44,7 +44,7 @@ def test_r_reference_workflows_read_in_python(bundles, name):
     dataset = read_superdf(bundles / f"{name}.superdf")
     dataset.validate()
     assert dataset.data.equals(dataset.roster)
-    assert dataset.context["schema_version"] == "0.2.0"
+    assert dataset.context["schema_version"] == "0.3.0"
 
 
 def test_view_retains_roster_and_stable_variable_identity(bundles):
@@ -116,5 +116,5 @@ def test_schema_version_checked_even_with_valid_hashes(bundles, tmp_path):
     with ZipFile(target, "w", ZIP_DEFLATED) as archive:
         for name, value in entries.items():
             archive.writestr(name, value)
-    with pytest.raises(Exception, match="0.2.0"):
+    with pytest.raises(Exception, match="0.3.0"):
         read_superdf(target)

@@ -15,7 +15,10 @@ superdf(
   variables = list(),
   sampling = list(),
   weights = list(),
-  assignments = list()
+  assignments = list(),
+  roster = roster_spec(),
+  evidence = list(),
+  diagnostics = list()
 )
 }
 \arguments{
@@ -42,6 +45,12 @@ an unknown definition. IDs default to column names and must be syntactic identif
 \item{weights}{List of weight_spec declarations.}
 
 \item{assignments}{List of assignment_spec declarations.}
+
+\item{roster}{A roster_spec. Ordinary imports default to unknown completeness.}
+
+\item{evidence}{List of evidence_spec source records.}
+
+\item{diagnostics}{List of analysis_issue records retaining import uncertainty.}
 }
 \value{
 A superdf inheriting from data.frame, with its original roster attached.

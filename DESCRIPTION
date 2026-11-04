@@ -1,6 +1,6 @@
 Package: superdf
 Title: Data Frames with Collection Context
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: 
     person("Gaurav Sood", 
            email = "contact@gsood.com", 

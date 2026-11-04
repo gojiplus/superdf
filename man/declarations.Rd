@@ -19,7 +19,9 @@ variable_spec(
   missing = list(),
   wave = NULL,
   source = "",
-  status = "unknown"
+  status = "unknown",
+  evidence = character(),
+  instrument = NULL
 )
 
 sampling_stage(
@@ -38,7 +40,9 @@ sampling_spec(
   stages = list(),
   state = "known",
   source = "",
-  status = "documented"
+  status = "documented",
+  evidence = character(),
+  phase = "realized"
 )
 
 variance_spec(
@@ -62,7 +66,9 @@ weight_spec(
   adjustments = character(),
   variance = variance_spec(),
   source = "",
-  status = "documented"
+  status = "documented",
+  evidence = character(),
+  phase = "realized"
 )
 
 assignment_spec(
@@ -75,7 +81,9 @@ assignment_spec(
   conditions = c(0, 1),
   state = "known",
   source = "",
-  status = "documented"
+  status = "documented",
+  evidence = character(),
+  phase = "realized"
 )
 }
 \arguments{
@@ -98,6 +106,10 @@ in storage; adapters convert declared codes to NA before analysis.}
 
 \item{status}{One of documented, assumed, or unknown.}
 
+\item{evidence}{Character vector of source-artifact IDs.}
+
+\item{instrument}{An instrument_ref or NULL.}
+
 \item{unit}{Variable identifying sampling or assignment units.}
 
 \item{strata}{Variable identifying sampling strata, or NULL.}
@@ -117,6 +129,8 @@ in storage; adapters convert declared codes to NA before analysis.}
 \item{stages}{Ordered list of sampling_stage declarations.}
 
 \item{state}{known, unknown, or not_applicable.}
+
+\item{phase}{planned or realized; only realized declarations support inference.}
 
 \item{replicates}{Stable identifiers of replicate-weight columns.}
 

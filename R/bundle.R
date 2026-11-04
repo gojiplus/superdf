@@ -201,13 +201,19 @@ write_codebook <- function(x, file) {
     "",
     "## Collection and analysis declarations",
     "",
-    "These declarations are documented facts or assumptions, not proof of identification.",
+    "These are supplied declarations and assumptions, not independently verified facts or proof of identification.",
     "",
     "```json",
     jsonlite::prettify(.json(list(
       sampling = ctx$sampling,
       weights = ctx$weights,
-      assignments = ctx$assignments
+      assignments = ctx$assignments,
+      roster = ctx$roster,
+      evidence = ctx$evidence,
+      diagnostics = ctx$diagnostics,
+      instrument_mappings = lapply(ctx$variables, function(v) {
+        list(id = v$id, instrument = v$instrument)
+      })
     ))),
     "```",
     "",

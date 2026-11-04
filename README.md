@@ -70,6 +70,8 @@ not a redacted release. To distribute fewer original records, explicitly constru
 a new dataset and reconsider its design declarations.
 
 `derive_superdf()` adds a defined measurement without overwriting original facts.
+`recode_superdf()` records an explicit value mapping into a new measurement and
+requires a policy for unmapped values.
 `join_superdf()` requires keys and a unique right-hand match. `rbind()` accepts
 disjoint views of the same collection; it rejects incompatible collections.
 Aggregation requires an explicit new observational unit and dataset. Direct
@@ -77,6 +79,14 @@ replacement operations are refused, and adapter-time validation detects mutation
 that bypass the supported methods.
 
 ## Data and context travel together
+
+Schema 0.3 separates received responses from invited, sampled, and randomized
+rosters. Ordinary dataframe imports start with unknown completeness. Experimental
+inference requires an asserted-complete randomized roster scoped to its assignment,
+with source evidence. Evidence records carry source locations, optional hashes,
+capture times, producer identities, and versions. Instrument references connect
+measurements to question and subquestion IDs. Unknown facts remain unknown;
+planned sampling or assignment declarations cannot stand in for realized designs.
 
 ```r
 write_superdf(study, "study.superdf")
@@ -104,6 +114,43 @@ print(study.context["weights"])
 Python currently reads and validates bundles; it does not provide analysis or
 transformation adapters. The schema is packaged from the R package's single source.
 
+The [producer conformance kit](inst/conformance/README.md) builds a bundle using
+only Arrow and JSON. Both language readers run the same positive and negative cases.
+
+## Check a request before fitting
+
+```r
+request <- analysis_request("mean", "income", weight = "main")
+requirements <- check_analysis(study, request)
+requirements$issues
+if (requirements$ok) result <- run_analysis(study, request)
+```
+
+Checking prepares the design without fitting an outcome estimator. Issues include
+stable codes, categories, affected declarations, evidence references, and remedies.
+Estimation uses the same requirements and returns a native statistical fit together
+with the request, input identity, selected declarations, assumptions, omissions,
+and interval convention. A passing check supports execution of the declared
+analysis; it does not verify the study's scientific assertions.
+
+## Start with a Qualtrics export
+
+```r
+responses <- read_qualtrics("responses.csv", "instrument.qsf")
+write_codebook(responses, "codebook.md")
+context(responses)$diagnostics
+```
+
+The importer maps supported questions through stable import IDs, preserves explicit
+recodes and source hashes, and can join responses to an authoritative external
+roster. Response-only imports are also supported when the QSF is unavailable;
+instrument identity and coding remain unresolved. Preview records require an
+explicit policy. An exported response table does not establish the original
+sampling or randomized roster.
+
+See the [collection workflow](inst/examples/qualtrics.md) for supported question
+types, a complete executable example, and composition with `qualtRics` downloads.
+
 ## Supported analyses and limits
 
 | Component | Implemented |
@@ -122,7 +169,8 @@ weights is refused because calibration and adjustment variance structures are no
 yet represented. Replicate specifications can carry adjustment effects when the
 producer supplies the appropriate replicates. Multiple imputation, variable
 eligibility logic, longitudinal estimators, arbitrary joint inclusion probabilities,
-general multi-table studies, and collection-system imports are future work.
+and general multi-table studies are future work. Collection import currently
+covers a bounded set of Qualtrics CSV/QSF representations.
 
 Factors, dates, nested columns, infinity, and NaN require explicit conversion.
 Numeric missing codes remain in storage and are converted only for analysis.

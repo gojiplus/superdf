@@ -10,12 +10,12 @@ test-python:
 
 lint:
 	Rscript -e 'pkgload::load_all(quiet = TRUE); lints <- lintr::lint_package(); print(lints); if (length(lints)) quit(status = 1)'
-	uv run --extra dev ruff check python
-	uv run --extra dev ruff format --check python
+	uv run --extra dev ruff check python inst/conformance/producer.py
+	uv run --extra dev ruff format --check python inst/conformance/producer.py
 
 format:
 	air format R tests inst/examples
-	uv run --extra dev ruff format python
+	uv run --extra dev ruff format python inst/conformance/producer.py
 
 document:
 	Rscript -e 'roxygen2::roxygenise()'

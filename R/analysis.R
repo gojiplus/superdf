@@ -1,11 +1,12 @@
 .require <- function(package) {
   if (!requireNamespace(package, quietly = TRUE)) {
-    stop(
-      "Install the '",
+    .analysis_abort(analysis_issue(
+      "missing_dependency",
+      "dependency",
       package,
-      "' package for this operation.",
-      call. = FALSE
-    )
+      paste("Install the", package, "package for this operation."),
+      remedy = "Install the required package on the execution host."
+    ))
   }
 }
 .choose <- function(records, id, kind) {
@@ -14,9 +15,12 @@
     function(z) identical(z$id, id),
     logical(1)
   ))
-  .assert(
+  .need(
     length(selected) == 1L,
-    paste("Select an existing", kind, "identifier explicitly.")
+    paste("Select an existing", kind, "identifier explicitly."),
+    code = "declaration_required",
+    category = "choice",
+    path = kind
   )
   records[[selected]]
 }
@@ -43,9 +47,12 @@
 }
 .present <- function(x, ids) {
   for (id in ids) {
-    .assert(
+    .need(
       .col(context(x), id) %in% names(x),
-      paste("Required variable is absent from the current view:", id)
+      paste("Required variable is absent from the current view:", id),
+      code = "variable_absent",
+      category = "missing",
+      path = id
     )
   }
 }
@@ -60,20 +67,36 @@
   selected
 }
 .known <- function(declaration) {
-  .assert(
+  .need(
+    declaration$phase == "realized",
+    "Planned declarations do not establish the realized design.",
+    code = "design_not_realized",
+    category = "missing",
+    path = declaration$id,
+    sources = .strings(declaration$evidence)
+  )
+  .need(
     declaration$status != "unknown",
-    "The requested declaration is unknown; provide its documented facts or explicit assumptions."
+    "The requested declaration is unknown; provide its documented facts or explicit assumptions.",
+    code = "declaration_unknown",
+    category = "missing",
+    path = declaration$id,
+    sources = .strings(declaration$evidence)
   )
   if (!is.null(declaration$state)) {
-    .assert(
+    .need(
       declaration$state == "known",
-      "The requested collection mechanism is not known."
+      "The requested collection mechanism is not known.",
+      code = "mechanism_unknown",
+      category = "missing",
+      path = declaration$id,
+      sources = .strings(declaration$evidence)
     )
   }
 }
 .numeric_column <- function(data, id, positive = TRUE) {
   values <- data[[id]]
-  .assert(
+  .need(
     is.numeric(values) &&
       !anyNA(values) &&
       all(is.finite(values)) &&
@@ -98,7 +121,7 @@ as_survey <- function(x, weight, domain = FALSE) {
   ctx <- context(x)
   w <- .choose(ctx$weights, weight, "weight")
   .known(w)
-  .assert(
+  .need(
     w$role %in% c("base", "final"),
     "Survey inference requires a base or final sampling weight."
   )
@@ -106,18 +129,20 @@ as_survey <- function(x, weight, domain = FALSE) {
   applicable <- .scope(full, w$applies)
   roster_keys <- .keys(attr(x, "reference"), ctx)
   current_keys <- .keys(.plain(x), ctx)
-  .assert(
+  .need(
     all(current_keys %in% roster_keys[applicable]),
     "The selected weight is not applicable to every current observation."
   )
-  .assert(
+  .need(
     any(applicable) && length(current_keys) > 0L,
     "No applicable observations."
   )
   restricted <- !setequal(current_keys, roster_keys[applicable])
-  .assert(
+  .need(
     !restricted || isTRUE(domain),
-    "Restricted view: declare domain = TRUE, or use the full applicable roster."
+    "Restricted view: declare domain = TRUE, or use the full applicable roster.",
+    code = "domain_required",
+    category = "choice"
   )
   data <- full[applicable, , drop = FALSE]
   variance <- w$variance
@@ -131,27 +156,35 @@ as_survey <- function(x, weight, domain = FALSE) {
   if (variance$method == "taylor") {
     s <- .choose(ctx$sampling, w$sampling, "sampling design")
     .known(s)
-    .assert(
+    .need(
       length(s$stages) > 0L,
       "Taylor variance requires declared sampling stages."
     )
-    .assert(
+    .need(
       length(w$adjustments) == 0L,
-      "Adjusted weights with Taylor variance are unsupported; documented replicate weights are an alternative."
+      "Adjusted weights with Taylor variance are unsupported; documented replicate weights are an alternative.",
+      code = "adjusted_taylor_unsupported",
+      category = "unsupported"
     )
     stages <- s$stages
     replacement <- vapply(stages, function(z) z$replacement, character(1))
-    .assert(
+    .need(
       all(vapply(stages, function(z) z$method == "srs", logical(1))),
-      "This adapter supports SRS stages only; PPS and unknown methods are retained but not translated."
+      "This adapter supports SRS stages only; PPS and unknown methods are retained but not translated.",
+      code = "sampling_method_unsupported",
+      category = "unsupported"
     )
-    .assert(
+    .need(
       all(replacement != "unknown"),
-      "Sampling replacement must be declared."
+      "Sampling replacement must be declared.",
+      code = "replacement_unknown",
+      category = "missing"
     )
-    .assert(
+    .need(
       length(stages) == 1L || all(replacement == "without"),
-      "Multistage translation requires without-replacement stages with FPC information at every stage."
+      "Multistage translation requires without-replacement stages with FPC information at every stage.",
+      code = "multistage_unsupported",
+      category = "unsupported"
     )
     ids <- character()
     strata <- character()
@@ -166,24 +199,26 @@ as_survey <- function(x, weight, domain = FALSE) {
         stage$fpc$variable
       )
       .present(x, stage_refs)
-      .assert(!anyNA(data[[stage$unit]]), "Sampling units cannot be missing.")
+      .need(!anyNA(data[[stage$unit]]), "Sampling units cannot be missing.")
       ids <- c(ids, stage$unit)
       stratum <- stage$strata
       if (is.null(stratum)) {
         stratum <- paste0(".superdf_stratum", i)
         data[[stratum]] <- 1L
       }
-      .assert(!anyNA(data[[stratum]]), "Sampling strata cannot be missing.")
+      .need(!anyNA(data[[stratum]]), "Sampling strata cannot be missing.")
       strata <- c(strata, stratum)
       if (stage$replacement == "with") {
-        .assert(
+        .need(
           is.null(stage$fpc),
           "With-replacement sampling cannot carry an FPC in this adapter."
         )
       } else {
-        .assert(
+        .need(
           !is.null(stage$fpc),
-          "Without-replacement sampling requires explicit finite-population information."
+          "Without-replacement sampling requires explicit finite-population information.",
+          code = "fpc_required",
+          category = "missing"
         )
         .numeric_column(data, stage$fpc$variable)
         f <- data[[stage$fpc$variable]]
@@ -200,7 +235,7 @@ as_survey <- function(x, weight, domain = FALSE) {
         count <- stats::ave(seq_len(nrow(data)), parent, FUN = function(rows) {
           length(unique(data[[stage$unit]][rows]))
         })
-        .assert(
+        .need(
           all(vapply(
             split(f, parent),
             function(z) length(unique(z)) == 1L,
@@ -209,14 +244,14 @@ as_survey <- function(x, weight, domain = FALSE) {
           "FPC information must be constant within each sampling stratum and parent unit."
         )
         if (stage$fpc$kind == "sampling_fraction") {
-          .assert(all(f <= 1), "FPC sampling fractions must be at most one.")
+          .need(all(f <= 1), "FPC sampling fractions must be at most one.")
           population <- count / f
         } else {
-          .assert(
+          .need(
             all(f >= 1 & f == floor(f)),
             "FPC population sizes must be positive integers."
           )
-          .assert(
+          .need(
             all(f >= count),
             "FPC population size is smaller than the sampled unit count."
           )
@@ -228,7 +263,7 @@ as_survey <- function(x, weight, domain = FALSE) {
       }
       if (!is.null(stage$probability)) {
         .numeric_column(data, stage$probability)
-        .assert(
+        .need(
           all(data[[stage$probability]] <= 1),
           "Inclusion probabilities must not exceed one."
         )
@@ -237,7 +272,7 @@ as_survey <- function(x, weight, domain = FALSE) {
     }
     if (w$role == "base" && length(probabilities) == length(stages)) {
       inverse <- 1 / Reduce(`*`, data[probabilities])
-      .assert(
+      .need(
         isTRUE(all.equal(
           data[[w$variable]],
           inverse,
@@ -255,7 +290,7 @@ as_survey <- function(x, weight, domain = FALSE) {
       nest = TRUE
     )
     if (length(fpcs)) {
-      .assert(
+      .need(
         any(as.matrix(data[fpcs]) > 1),
         "A census consisting entirely of singleton strata is not supported by this survey adapter."
       )
@@ -267,21 +302,25 @@ as_survey <- function(x, weight, domain = FALSE) {
     for (id in replicates) {
       .numeric_column(data, id, positive = FALSE)
     }
-    .assert(
+    .need(
       all(vapply(data[replicates], function(z) sum(z) > 0, logical(1))),
       "Each replicate must have positive total weight."
     )
     if (variance$method == "other") {
-      .assert(
+      .need(
         !is.null(variance$scale) &&
           length(variance$rscales) == length(replicates),
-        "Other replicate variance requires scale and one rscale per replicate."
+        "Other replicate variance requires scale and one rscale per replicate.",
+        code = "replicate_scaling_required",
+        category = "missing"
       )
     }
     if (variance$method %in% c("BRR", "Fay")) {
-      .assert(
+      .need(
         is.null(variance$scale) && length(variance$rscales) == 0L,
-        "BRR/Fay scaling is determined by the method; explicit scale/rscales would be ignored by survey."
+        "BRR/Fay scaling is determined by the method; explicit scale/rscales would be ignored by survey.",
+        code = "replicate_scaling_unsupported",
+        category = "unsupported"
       )
     }
     args <- list(
@@ -321,26 +360,23 @@ as_survey <- function(x, weight, domain = FALSE) {
 }
 
 .analysis_result <- function(fit, x, analysis) {
+  analysis$receipt_version <- "0.3.0"
   analysis$input_digest <- attr(x, "seal")
   analysis$digest_method <- "SHA-256 of R serialization version 2"
   analysis$superdf_version <- as.character(utils::packageVersion("superdf"))
   analysis$r_version <- as.character(getRversion())
   structure(
-    list(fit = fit, analysis = analysis, context = context(x)),
+    list(
+      result_version = "0.3.0",
+      fit = fit,
+      analysis = analysis,
+      context = context(x)
+    ),
     class = "superdf_result"
   )
 }
 
-#' Estimate a mean using a declared survey design
-#' @param x A superdf.
-#' @param outcome Stable identifier of a numeric outcome.
-#' @param weight Explicit weight declaration identifier.
-#' @param domain Interpret a restricted view as a population domain.
-#' @param missing fail or omit. Omission is recorded and does not establish an
-#'   assumption about nonresponse. Codes declared in variable_spec are treated as missing.
-#' @return A superdf_result containing the native fit, resolved analysis, and context.
-#' @export
-estimate_mean <- function(
+.prepare_mean <- function(
   x,
   outcome,
   weight,
@@ -353,88 +389,86 @@ estimate_mean <- function(
   ctx <- context(x)
   variable <- .choose(ctx$variables, outcome, "outcome")
   w <- .choose(ctx$weights, weight, "weight")
-  .assert(
+  .need(
     variable$storage %in% c("integer", "number"),
     "The mean adapter requires a numeric outcome."
   )
   if (!is.null(variable$wave)) {
-    .assert(
+    .need(
       variable$wave %in% .strings(w$waves),
-      "The weight does not declare support for the outcome's measurement wave."
+      "The weight does not declare support for the outcome's measurement wave.",
+      code = "weight_wave_mismatch",
+      category = "invalid"
     )
   }
   design <- as_survey(x, weight, domain)
   absent <- sum(is.na(design$variables[[outcome]]))
-  .assert(
+  .need(
     missing != "fail" || absent == 0L,
-    "Missing outcomes: choose a missing-data policy explicitly."
+    "Missing outcomes: choose a missing-data policy explicitly.",
+    code = "missing_outcomes",
+    category = "choice"
   )
-  .assert(absent < nrow(x), "Every outcome is missing.")
-  old <- options(
-    survey.lonely.psu = w$variance$lonely_psu,
-    survey.adjust.domain.lonely = FALSE
-  )
-  on.exit(options(old), add = TRUE)
-  fit <- survey::svymean(.formula(outcome), design, na.rm = missing == "omit")
+  .need(absent < nrow(x), "Every outcome is missing.")
   analysis <- attr(design, "superdf_analysis")
   analysis$outcome <- outcome
   analysis$missing <- missing
   analysis$missing_rows <- absent
   analysis$used_rows <- nrow(x) - absent
   analysis$design_df <- survey::degf(design)
+  analysis$estimator <- "svymean"
   analysis$adjust_domain_lonely <- FALSE
-  .analysis_result(fit, x, analysis)
+  list(design = design, weight = w, analysis = analysis)
 }
 
-#' Estimate an effect under a supported complete randomization
-#' @param x A superdf containing the complete original roster.
-#' @param outcome Stable identifier of a numeric outcome.
-#' @param assignment Explicit assignment declaration identifier.
-#' @return A superdf_result wrapping estimatr::difference_in_means. This adapter
-#'   supports two-arm complete randomization, including blocks and clusters,
-#'   with constant declared assignment probability and complete outcomes.
-#'   It does not extrapolate to a sampled population or handle attrition.
-#' @export
-estimate_effect <- function(x, outcome, assignment) {
+.prepare_effect <- function(x, outcome, assignment) {
   validate_superdf(x)
   .require("estimatr")
   ctx <- context(x)
   a <- .choose(ctx$assignments, assignment, "assignment")
   .known(a)
-  .assert(
+  .need(
     a$mechanism == "complete" && !is.null(a$prob),
-    "The effect adapter requires complete randomization with a declared probability."
+    "The effect adapter requires complete randomization with a declared probability.",
+    code = "assignment_method_unsupported",
+    category = "unsupported"
   )
-  .assert(
+  .need(
     length(ctx$units$keys) == 1L,
-    "Repeated-measure/compound-key effect analyses require a new analysis dataset; this adapter does not support them."
+    "Repeated-measure/compound-key effect analyses require a new analysis dataset; this adapter does not support them.",
+    code = "compound_effect_unsupported",
+    category = "unsupported"
   )
   .present(x, c(outcome, a$treatment, a$unit, a$blocks))
   ref <- attr(x, "reference")
-  .assert(
+  .need(
     setequal(.keys(.plain(x), ctx), .keys(ref, ctx)),
-    "Attrition or restriction: the effect adapter requires the full randomized roster."
+    "Attrition or restriction: the effect adapter requires the full randomized roster.",
+    code = "randomized_units_absent",
+    category = "invalid"
   )
   data <- .engine_data(x)
-  .assert(
+  .need(
     is.numeric(data[[outcome]]) && !anyNA(data[[outcome]]),
-    "Missing or nonnumeric outcomes: the effect adapter requires complete numeric outcomes."
+    "Missing or nonnumeric outcomes: the effect adapter requires complete numeric outcomes.",
+    code = "effect_outcomes_incomplete",
+    category = "missing"
   )
   z <- data[[a$treatment]]
   conditions <- .strings(a$conditions)
-  .assert(
+  .need(
     !anyNA(z) && all(z %in% conditions),
     "Assignment codes disagree with declared conditions."
   )
-  .assert(!anyNA(data[[a$unit]]), "Assignment units cannot be missing.")
+  .need(!anyNA(data[[a$unit]]), "Assignment units cannot be missing.")
   groups <- split(seq_len(nrow(data)), data[[a$unit]])
   for (rows in groups) {
-    .assert(
+    .need(
       length(unique(z[rows])) == 1L,
       "Treatment varies within an assignment unit."
     )
     if (!is.null(a$blocks)) {
-      .assert(
+      .need(
         !anyNA(data[[a$blocks]][rows]) &&
           length(unique(data[[a$blocks]][rows])) == 1L,
         "Assignment units must nest in blocks."
@@ -447,8 +481,38 @@ estimate_effect <- function(x, outcome, assignment) {
   } else {
     data[[a$blocks]][units]
   }
-  for (rows in split(units, block)) {
-    .assert(
+  allocation <- split(units, block)
+  sizes <- lengths(allocation)
+  paired <- !is.null(a$blocks) && all(sizes == 2L)
+  .need(
+    is.null(a$blocks) || !any(sizes == 2L) || paired,
+    "Mixed paired and larger blocks require an explicit variance adapter.",
+    code = "mixed_block_sizes_unsupported",
+    category = "unsupported",
+    path = a$id,
+    sources = .strings(a$evidence)
+  )
+  .need(
+    !paired || length(allocation) >= 2L,
+    "Matched-pair inference requires at least two independent pairs.",
+    code = "assignment_replication_insufficient",
+    path = a$id,
+    sources = .strings(a$evidence)
+  )
+  for (rows in allocation) {
+    .need(
+      paired ||
+        all(vapply(
+          conditions,
+          function(condition) sum(z[rows] == condition) >= 2L,
+          logical(1)
+        )),
+      "Unpaired effect inference requires at least two assignment units per condition within every block.",
+      code = "assignment_replication_insufficient",
+      path = a$id,
+      sources = .strings(a$evidence)
+    )
+    .need(
       abs(sum(z[rows] == conditions[[2]]) - length(rows) * a$prob) < 1e-8,
       "Realized allocation disagrees with the declared complete-randomization probability."
     )
@@ -469,7 +533,6 @@ estimate_effect <- function(x, outcome, assignment) {
   if (!is.null(a$blocks)) {
     args$blocks <- as.name(a$blocks)
   }
-  fit <- do.call(estimatr::difference_in_means, args)
   analysis <- list(
     dataset = ctx$dataset,
     assignment = assignment,
@@ -483,7 +546,7 @@ estimate_effect <- function(x, outcome, assignment) {
     backend = "estimatr",
     backend_version = as.character(utils::packageVersion("estimatr"))
   )
-  .analysis_result(fit, x, analysis)
+  list(args = args, analysis = analysis)
 }
 
 #' @export

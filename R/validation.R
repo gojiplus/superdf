@@ -48,7 +48,46 @@
   ids <- .unique_ids(ctx$variables, "variable")
   sampling_ids <- .unique_ids(ctx$sampling, "sampling")
   .unique_ids(ctx$weights, "weight")
-  .unique_ids(ctx$assignments, "assignment")
+  assignment_ids <- .unique_ids(ctx$assignments, "assignment")
+  evidence_ids <- .unique_ids(ctx$evidence, "evidence")
+  sources <- .strings(ctx$roster$evidence)
+  for (item in c(ctx$variables, ctx$sampling, ctx$weights, ctx$assignments)) {
+    sources <- c(sources, .strings(item$evidence))
+    if (!is.null(item$instrument)) sources <- c(sources, item$instrument$source)
+  }
+  for (issue in ctx$diagnostics) {
+    sources <- c(sources, .strings(issue$sources))
+  }
+  .assert(
+    all(sources %in% evidence_ids),
+    "A declaration references unknown evidence."
+  )
+  roster <- ctx$roster
+  if (!is.null(roster$scope)) {
+    allowed <- if (roster$kind == "randomized_units") {
+      assignment_ids
+    } else {
+      sampling_ids
+    }
+    .assert(
+      roster$scope %in% allowed,
+      "Roster scope does not match its declaration kind."
+    )
+  }
+  if (roster$completeness == "asserted_complete") {
+    .assert(
+      roster$kind != "unknown" &&
+        nzchar(trimws(roster$source)) &&
+        length(roster$evidence) > 0L,
+      "Asserted roster completeness requires a known kind, a source, and evidence references."
+    )
+    if (roster$kind %in% c("sampled_units", "randomized_units")) {
+      .assert(
+        !is.null(roster$scope),
+        "Complete sampled or randomized rosters require a scope declaration."
+      )
+    }
+  }
   columns <- vapply(ctx$variables, function(v) v$column, character(1))
   .assert(!anyDuplicated(columns), "Variable columns must be unique.")
   .assert(

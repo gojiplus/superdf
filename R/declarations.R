@@ -45,6 +45,9 @@
 #' @param mechanism complete, bernoulli, or unknown assignment.
 #' @param prob Probability of the second condition, constant across units.
 #' @param conditions Two ordered assignment codes: control, treatment.
+#' @param evidence Character vector of source-artifact IDs.
+#' @param instrument An instrument_ref or NULL.
+#' @param phase planned or realized; only realized declarations support inference.
 #' @return A plain list conforming to a component of the SuperDF schema.
 #' @name declarations
 #' @examples
@@ -64,7 +67,9 @@ variable_spec <- function(
   missing = list(),
   wave = NULL,
   source = "",
-  status = "unknown"
+  status = "unknown",
+  evidence = character(),
+  instrument = NULL
 ) {
   list(
     id = id,
@@ -75,7 +80,9 @@ variable_spec <- function(
     missing = missing,
     wave = wave,
     source = source,
-    status = status
+    status = status,
+    evidence = as.list(evidence),
+    instrument = instrument
   )
 }
 
@@ -108,7 +115,9 @@ sampling_spec <- function(
   stages = list(),
   state = "known",
   source = "",
-  status = "documented"
+  status = "documented",
+  evidence = character(),
+  phase = "realized"
 ) {
   list(
     id = id,
@@ -116,7 +125,9 @@ sampling_spec <- function(
     population = population,
     stages = stages,
     source = source,
-    status = status
+    status = status,
+    evidence = as.list(evidence),
+    phase = phase
   )
 }
 
@@ -156,7 +167,9 @@ weight_spec <- function(
   adjustments = character(),
   variance = variance_spec(),
   source = "",
-  status = "documented"
+  status = "documented",
+  evidence = character(),
+  phase = "realized"
 ) {
   list(
     id = id,
@@ -168,7 +181,9 @@ weight_spec <- function(
     adjustments = as.list(adjustments),
     variance = variance,
     source = source,
-    status = status
+    status = status,
+    evidence = as.list(evidence),
+    phase = phase
   )
 }
 
@@ -184,7 +199,9 @@ assignment_spec <- function(
   conditions = c(0, 1),
   state = "known",
   source = "",
-  status = "documented"
+  status = "documented",
+  evidence = character(),
+  phase = "realized"
 ) {
   list(
     id = id,
@@ -196,6 +213,8 @@ assignment_spec <- function(
     prob = prob,
     conditions = as.list(conditions),
     source = source,
-    status = status
+    status = status,
+    evidence = as.list(evidence),
+    phase = phase
   )
 }
