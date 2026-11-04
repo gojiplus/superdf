@@ -48,7 +48,7 @@
 #' @param evidence Character vector of source-artifact IDs.
 #' @param instrument An instrument_ref or NULL.
 #' @param phase planned or realized; only realized declarations support inference.
-#' @return A plain list conforming to a component of the SuperDF schema.
+#' @return A plain list conforming to a component of the studyframe schema.
 #' @name declarations
 #' @examples
 #' stage <- sampling_stage("school", method = "srs", strata = "district", replacement = "with")

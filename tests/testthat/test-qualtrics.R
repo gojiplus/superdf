@@ -32,7 +32,7 @@ qualtrics_changed_qsf <- function(change) {
 }
 
 qualtrics_roster <- function() {
-  superdf(
+  studyframe(
     data.frame(id = 1:5, offer = c(0L, 1L, 0L, 1L, 0L)),
     "id",
     "person",
@@ -271,7 +271,7 @@ test_that("synthetic collection reaches estimatr and a portable bundle", {
   skip_if_not_installed("estimatr")
   skip_if_not_installed("arrow")
   source(
-    system.file("examples", "qualtrics_workflow.R", package = "superdf"),
+    system.file("examples", "qualtrics_workflow.R", package = "studyframe"),
     local = TRUE
   )
   result <- run_qualtrics_workflow(tempfile("qualtrics-study-"))

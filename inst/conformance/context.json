@@ -3,7 +3,7 @@
   "dataset": {
     "id": "independent_producer",
     "version": "1",
-    "author": "SuperDF conformance example",
+    "author": "studyframe conformance example",
     "notes": "Synthetic producer fixture"
   },
   "units": {
@@ -100,7 +100,7 @@
       "id": "protocol",
       "uri": "protocol.txt",
       "sha256": "184a24a0a39a1c3debc5a4090a439b2fcbf4c372e9c72dd7e5ae176c99f4feda",
-      "producer": "SuperDF conformance example",
+      "producer": "studyframe conformance example",
       "captured_at": null,
       "version": "1",
       "description": "Synthetic assignment protocol"

@@ -7,14 +7,14 @@
 estimate_effect(x, outcome, assignment)
 }
 \arguments{
-\item{x}{A superdf with a sourced asserted-complete randomized roster.}
+\item{x}{A studyframe with a sourced asserted-complete randomized roster.}
 
 \item{outcome}{Stable numeric outcome identifier.}
 
 \item{assignment}{Explicit assignment declaration identifier.}
 }
 \value{
-A superdf_result. Supports two-arm complete randomization, including
+A studyframe_result. Supports two-arm complete randomization, including
 blocks and clusters, with constant probability and complete outcomes.
 }
 \description{

@@ -1,4 +1,4 @@
 source(
-  system.file("examples", "workflows.R", package = "superdf"),
+  system.file("examples", "workflows.R", package = "studyframe"),
   local = TRUE
 )

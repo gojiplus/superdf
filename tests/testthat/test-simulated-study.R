@@ -4,7 +4,7 @@ test_that("simulated collection reaches inference without exposing potential out
   skip_if_not_installed("arrow")
   skip_if_not_installed("zip")
   source(
-    system.file("examples", "simulated_study.R", package = "superdf"),
+    system.file("examples", "simulated_study.R", package = "studyframe"),
     local = TRUE
   )
   population <- simulate_population()
@@ -17,10 +17,10 @@ test_that("simulated collection reaches inference without exposing potential out
   positions <- match(study$id, population$id)
   expect_equal(study$baseline, population$baseline[positions])
   expect_equal(study$followup, population$y0[positions] + 2 * study$offer)
-  path <- tempfile(fileext = ".superdf")
+  path <- tempfile(fileext = ".studyframe")
   on.exit(unlink(path), add = TRUE)
-  write_superdf(study, path)
-  received <- read_superdf(path)
+  write_studyframe(study, path)
+  received <- read_studyframe(path)
   result <- analyze_study(received)
   expect_equal(result$table, analyze_study(study)$table)
   expect_equal(result$baseline$analysis$design_df, 22L)

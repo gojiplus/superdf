@@ -8,7 +8,7 @@ from pathlib import Path
 
 import jsonschema
 import pytest
-from superdf import read_superdf
+from studyframe import read_studyframe
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / "inst/conformance"
@@ -27,34 +27,35 @@ def produced(tmp_path_factory):
             for key in patch["path"][:-1]:
                 target = target[key]
             target[patch["path"][-1]] = patch["value"]
-        write_example(directory / f"{case['name']}.superdf", context)
+        write_example(directory / f"{case['name']}.studyframe", context)
     return directory
 
 
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c["name"])
 def test_python_reader_conforms_to_independent_cases(produced, case):
-    path = produced / f"{case['name']}.superdf"
+    path = produced / f"{case['name']}.studyframe"
     if case["valid"]:
-        dataset = read_superdf(path)
+        dataset = read_studyframe(path)
         assert dataset.data.num_rows == 8
         assert (
-            dataset.context["evidence"][0]["producer"] == "SuperDF conformance example"
+            dataset.context["evidence"][0]["producer"]
+            == "studyframe conformance example"
         )
     else:
         with pytest.raises((ValueError, jsonschema.ValidationError)):
-            read_superdf(path)
+            read_studyframe(path)
 
 
 def test_r_reader_and_analysis_conform_to_same_cases(produced):
     script = r"""
 pkgload::load_all('.', quiet=TRUE)
 folder <- commandArgs(trailingOnly=TRUE)[[1]]
-paths <- list.files(folder, pattern='[.]superdf$', full.names=TRUE)
+paths <- list.files(folder, pattern='[.]studyframe$', full.names=TRUE)
 results <- lapply(paths, function(path) {
-  x <- tryCatch(read_superdf(path), error=identity)
+  x <- tryCatch(read_studyframe(path), error=identity)
   valid <- !inherits(x, 'error')
   request <- analysis_request('effect','y',assignment='trial')
-  list(name=sub('[.]superdf$', '', basename(path)), valid=valid,
+  list(name=sub('[.]studyframe$', '', basename(path)), valid=valid,
     analysis_ok=if (valid) check_analysis(x, request)$ok else NULL)
 })
 cat(jsonlite::toJSON(results, auto_unbox=TRUE))

@@ -25,6 +25,14 @@ def _require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
+def _finite_metadata(value: object) -> bool:
+    if isinstance(value, dict):
+        return all(_finite_metadata(item) for item in value.values())
+    if isinstance(value, list):
+        return all(_finite_metadata(item) for item in value)
+    return not isinstance(value, float) or math.isfinite(value)
+
+
 def _index(records: list[dict], name: str) -> dict:
     result = {r["id"]: r for r in records}
     _require(len(result) == len(records), f"Duplicate {name} identifiers")
@@ -56,6 +64,7 @@ class ResearchData:
     def validate(self) -> None:
         """Check structure, variable references, keys, and data/roster agreement."""
         ctx = self.context
+        _require(_finite_metadata(ctx), "Numeric metadata must be finite")
         jsonschema.Draft7Validator(_schema()).validate(ctx)
         variables = _index(ctx["variables"], "variable")
         sampling = _index(ctx["sampling"], "sampling")
@@ -241,7 +250,7 @@ class ResearchData:
             )
 
 
-def read_superdf(file: str | Path, max_bytes: int = 256 * 1024**2) -> ResearchData:
+def read_studyframe(file: str | Path, max_bytes: int = 256 * 1024**2) -> ResearchData:
     """Read a bounded, integrity-checked ZIP/Parquet/JSON bundle.
 
     No files are extracted. SHA-256 verifies payload integrity, not scientific
@@ -261,7 +270,7 @@ def read_superdf(file: str | Path, max_bytes: int = 256 * 1024**2) -> ResearchDa
         manifest = json.loads(archive.read("manifest.json"))
         _require(
             set(manifest) == {"format", "sha256"}
-            and manifest["format"] == "superdf-bundle/1",
+            and manifest["format"] == "studyframe-bundle/1",
             "Unsupported bundle manifest",
         )
         payloads = expected - {"manifest.json"}

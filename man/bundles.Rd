@@ -2,24 +2,24 @@
 % Please edit documentation in R/bundle.R
 \name{bundles}
 \alias{bundles}
-\alias{write_superdf}
-\alias{read_superdf}
+\alias{write_studyframe}
+\alias{read_studyframe}
 \title{Save or read data and context as one portable bundle}
 \usage{
-write_superdf(x, file)
+write_studyframe(x, file)
 
-read_superdf(file, max_bytes = 256 * 1024^2)
+read_studyframe(file, max_bytes = 256 * 1024^2)
 }
 \arguments{
-\item{x}{A superdf.}
+\item{x}{A studyframe.}
 
 \item{file}{Bundle filename. Writers refuse to overwrite existing files.}
 
 \item{max_bytes}{Maximum total uncompressed size accepted when reading.}
 }
 \value{
-write_superdf returns the filename invisibly; read_superdf returns a
-validated superdf. A bundle is a ZIP archive with two Parquet tables,
+write_studyframe returns the filename invisibly; read_studyframe returns a
+validated studyframe. A bundle is a ZIP archive with two Parquet tables,
 context.json, and a manifest containing SHA-256 integrity hashes.
 Hashes detect corruption, not the truth or authenticity of a declaration.
 }

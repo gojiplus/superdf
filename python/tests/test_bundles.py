@@ -10,7 +10,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 import pyarrow as pa
 import pytest
-from superdf import read_superdf
+from studyframe import read_studyframe
 
 
 @pytest.fixture(scope="session")
@@ -22,12 +22,12 @@ pkgload::load_all('.', quiet = TRUE)
 source('inst/examples/workflows.R')
 args <- commandArgs(trailingOnly = TRUE)
 examples <- write_example_bundles(args[[1]])
-view <- rename_superdf(examples$survey[c(8, 2, 1), ], c(income = 'monthly income'))
-write_superdf(view, file.path(args[[1]], 'view.superdf'))
-codes <- superdf(data.frame(id = c('अ', 'é', 'x'), y = c(1, -9, NA)),
+view <- rename_studyframe(examples$survey[c(8, 2, 1), ], c(income = 'monthly income'))
+write_studyframe(view, file.path(args[[1]], 'view.studyframe'))
+codes <- studyframe(data.frame(id = c('अ', 'é', 'x'), y = c(1, -9, NA)),
   'id', 'person', 'unicode', variables = list(variable_spec('y',
   missing = list(list(value = -9, reason = 'refused')))))
-write_superdf(codes, file.path(args[[1]], 'codes.superdf'))
+write_studyframe(codes, file.path(args[[1]], 'codes.studyframe'))
 """
     subprocess.run(
         ["Rscript", "-e", script, str(directory)],
@@ -41,14 +41,14 @@ write_superdf(codes, file.path(args[[1]], 'codes.superdf'))
 
 @pytest.mark.parametrize("name", ["survey", "replicates", "experiment", "waves"])
 def test_r_reference_workflows_read_in_python(bundles, name):
-    dataset = read_superdf(bundles / f"{name}.superdf")
+    dataset = read_studyframe(bundles / f"{name}.studyframe")
     dataset.validate()
     assert dataset.data.equals(dataset.roster)
     assert dataset.context["schema_version"] == "0.3.0"
 
 
 def test_view_retains_roster_and_stable_variable_identity(bundles):
-    dataset = read_superdf(bundles / "view.superdf")
+    dataset = read_studyframe(bundles / "view.studyframe")
     assert dataset.data.num_rows == 3
     assert dataset.roster.num_rows == 24
     assert dataset.data["id"].to_pylist() == [8, 2, 1]
@@ -58,7 +58,7 @@ def test_view_retains_roster_and_stable_variable_identity(bundles):
 
 
 def test_unknowns_codes_unicode_and_nulls_remain_distinct(bundles):
-    dataset = read_superdf(bundles / "codes.superdf")
+    dataset = read_studyframe(bundles / "codes.studyframe")
     assert dataset.data["id"].to_pylist() == ["अ", "é", "x"]
     assert dataset.data["y"].to_pylist() == [1.0, -9.0, None]
     assert dataset.context["sampling"] == []
@@ -69,7 +69,7 @@ def test_unknowns_codes_unicode_and_nulls_remain_distinct(bundles):
 
 
 def test_reader_refuses_semantic_inconsistency(bundles):
-    dataset = read_superdf(bundles / "survey.superdf")
+    dataset = read_studyframe(bundles / "survey.studyframe")
     ctx = copy.deepcopy(dataset.context)
     ctx["weights"][0]["variable"] = "absent"
     with pytest.raises(ValueError, match="Unknown variable"):
@@ -86,23 +86,32 @@ def test_reader_refuses_semantic_inconsistency(bundles):
         replace(dataset, data=changed).validate()
 
 
+@pytest.mark.parametrize("scale", [float("inf"), float("nan")])
+def test_nonfinite_metadata_is_rejected(bundles, scale):
+    dataset = read_studyframe(bundles / "replicates.studyframe")
+    ctx = copy.deepcopy(dataset.context)
+    ctx["weights"][0]["variance"]["scale"] = scale
+    with pytest.raises(ValueError, match="Numeric metadata must be finite"):
+        replace(dataset, context=ctx).validate()
+
+
 def test_integrity_and_size_limits(bundles, tmp_path):
-    source = bundles / "survey.superdf"
+    source = bundles / "survey.studyframe"
     with pytest.raises(ValueError, match="size limit"):
-        read_superdf(source, max_bytes=10)
+        read_studyframe(source, max_bytes=10)
     with ZipFile(source) as archive:
         entries = {n: archive.read(n) for n in archive.namelist()}
     entries["context.json"] = b"{}"
-    damaged = tmp_path / "damaged.superdf"
+    damaged = tmp_path / "damaged.studyframe"
     with ZipFile(damaged, "w", ZIP_DEFLATED) as archive:
         for name, value in entries.items():
             archive.writestr(name, value)
     with pytest.raises(ValueError, match="integrity failure"):
-        read_superdf(damaged)
+        read_studyframe(damaged)
 
 
 def test_schema_version_checked_even_with_valid_hashes(bundles, tmp_path):
-    with ZipFile(bundles / "survey.superdf") as archive:
+    with ZipFile(bundles / "survey.studyframe") as archive:
         entries = {n: archive.read(n) for n in archive.namelist()}
     ctx = json.loads(entries["context.json"])
     ctx["schema_version"] = "9000"
@@ -112,9 +121,9 @@ def test_schema_version_checked_even_with_valid_hashes(bundles, tmp_path):
         entries["context.json"]
     ).hexdigest()
     entries["manifest.json"] = json.dumps(manifest).encode()
-    target = tmp_path / "future.superdf"
+    target = tmp_path / "future.studyframe"
     with ZipFile(target, "w", ZIP_DEFLATED) as archive:
         for name, value in entries.items():
             archive.writestr(name, value)
     with pytest.raises(Exception, match="0.3.0"):
-        read_superdf(target)
+        read_studyframe(target)

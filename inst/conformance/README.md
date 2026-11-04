@@ -1,7 +1,7 @@
 # Producer conformance example
 
 The portable interface is the bundle and its versioned JSON schema. A producer
-does not need to import the R or Python SuperDF package to create one.
+does not need to import the R or Python studyframe package to create one.
 
 `producer.py` uses PyArrow and Python's standard library to write eight synthetic
 observations, a matching roster, the hand-authored `context.json`, and a manifest
@@ -9,7 +9,7 @@ with SHA-256 hashes of the three payloads. Its protocol is illustrative; neither
 the fixture nor its evidence hash establishes that a real randomization occurred.
 
 ```sh
-python inst/conformance/producer.py example.superdf
+python inst/conformance/producer.py example.studyframe
 ```
 
 The destination must not already exist. The four ZIP members are `data.parquet`,
@@ -20,8 +20,8 @@ for field definitions and reference constraints.
 Read and analyze the example in R:
 
 ```r
-library(superdf)
-study <- read_superdf("example.superdf")
+library(studyframe)
+study <- read_studyframe("example.studyframe")
 request <- analysis_request("effect", "y", assignment = "trial")
 stopifnot(check_analysis(study, request)$ok)
 result <- run_analysis(study, request)
@@ -31,9 +31,9 @@ result$fit
 Validate the same bundle in Python:
 
 ```python
-from superdf import read_superdf
+from studyframe import read_studyframe
 
-study = read_superdf("example.superdf")
+study = read_studyframe("example.studyframe")
 study.validate()
 ```
 

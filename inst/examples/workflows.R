@@ -8,7 +8,7 @@ reference_workflows <- function() {
     income = c(11:22, 31:42),
     subgroup = rep(c(TRUE, FALSE, TRUE), 8)
   )
-  sampled <- superdf(
+  sampled <- studyframe(
     survey_data,
     keys = "id",
     unit = "pupil",
@@ -48,7 +48,7 @@ reference_workflows <- function() {
     replicated[[paste0("rep", i)]] <- rep(2 * 8 / 7, 8)
     replicated[[paste0("rep", i)]][i] <- 0
   }
-  replicated <- superdf(
+  replicated <- studyframe(
     replicated,
     keys = "id",
     unit = "person",
@@ -74,7 +74,7 @@ reference_workflows <- function() {
     school = rep(1:8, each = 4),
     offer = rep(rep(c(0L, 1L), 4), each = 4)
   )
-  experiment <- superdf(
+  experiment <- studyframe(
     experiment,
     keys = "id",
     unit = "pupil",
@@ -89,7 +89,7 @@ reference_workflows <- function() {
     evidence = list(evidence_spec(
       "assignment_roster",
       "generated:assignment-roster",
-      producer = "SuperDF simulation",
+      producer = "studyframe simulation",
       description = "Full generated randomized roster; completeness asserted by generator"
     )),
     assignments = list(assignment_spec(
@@ -107,7 +107,7 @@ reference_workflows <- function() {
     id = 1:32,
     outcome = seq_len(32) + rep(rep(c(0, 2), 4), each = 4)
   )
-  experiment <- join_superdf(
+  experiment <- join_studyframe(
     experiment,
     outcomes,
     by = "id",
@@ -123,7 +123,7 @@ reference_workflows <- function() {
     pre_weight = rep(2, 12),
     post_weight = c(rep(2.4, 10), NA, NA)
   )
-  waves <- superdf(
+  waves <- studyframe(
     waves,
     keys = "id",
     unit = "person",
@@ -169,9 +169,9 @@ write_example_bundles <- function(directory) {
   dir.create(directory, recursive = TRUE, showWarnings = FALSE)
   examples <- reference_workflows()
   for (name in names(examples)) {
-    write_superdf(
+    write_studyframe(
       examples[[name]],
-      file.path(directory, paste0(name, ".superdf"))
+      file.path(directory, paste0(name, ".studyframe"))
     )
   }
   invisible(examples)

@@ -7,7 +7,7 @@
 check_analysis(x, request)
 }
 \arguments{
-\item{x}{A superdf.}
+\item{x}{A studyframe.}
 
 \item{request}{An analysis_request.}
 }

@@ -3,24 +3,24 @@
 }
 
 #' Save or read data and context as one portable bundle
-#' @param x A superdf.
+#' @param x A studyframe.
 #' @param file Bundle filename. Writers refuse to overwrite existing files.
 #' @param max_bytes Maximum total uncompressed size accepted when reading.
-#' @return write_superdf returns the filename invisibly; read_superdf returns a
-#'   validated superdf. A bundle is a ZIP archive with two Parquet tables,
+#' @return write_studyframe returns the filename invisibly; read_studyframe returns a
+#'   validated studyframe. A bundle is a ZIP archive with two Parquet tables,
 #'   context.json, and a manifest containing SHA-256 integrity hashes.
 #'   Hashes detect corruption, not the truth or authenticity of a declaration.
 #' @name bundles
 #' @export
-write_superdf <- function(x, file) {
-  validate_superdf(x)
+write_studyframe <- function(x, file) {
+  validate_studyframe(x)
   .require("arrow")
   .require("zip")
   .assert(
     !file.exists(file),
     "Destination exists; choose a new bundle filename."
   )
-  folder <- tempfile("superdf-")
+  folder <- tempfile("studyframe-")
   dir.create(folder)
   on.exit(unlink(folder, recursive = TRUE), add = TRUE)
   arrow::write_parquet(.plain(x), file.path(folder, "data.parquet"))
@@ -39,7 +39,7 @@ write_superdf <- function(x, file) {
     payloads
   )
   writeLines(
-    .json(list(format = "superdf-bundle/1", sha256 = hashes)),
+    .json(list(format = "studyframe-bundle/1", sha256 = hashes)),
     file.path(folder, "manifest.json")
   )
   destination <- file.path(
@@ -47,7 +47,7 @@ write_superdf <- function(x, file) {
     basename(file)
   )
   archive <- tempfile(
-    "superdf-",
+    "studyframe-",
     tmpdir = dirname(destination),
     fileext = ".zip"
   )
@@ -62,7 +62,7 @@ write_superdf <- function(x, file) {
 
 #' @rdname bundles
 #' @export
-read_superdf <- function(file, max_bytes = 256 * 1024^2) {
+read_studyframe <- function(file, max_bytes = 256 * 1024^2) {
   .require("arrow")
   inventory <- utils::unzip(file, list = TRUE)
   expected <- c(
@@ -83,7 +83,7 @@ read_superdf <- function(file, max_bytes = 256 * 1024^2) {
       sum(inventory$Length) <= max_bytes,
     "Bundle exceeds the uncompressed size limit."
   )
-  folder <- tempfile("superdf-")
+  folder <- tempfile("studyframe-")
   dir.create(folder)
   on.exit(unlink(folder, recursive = TRUE), add = TRUE)
   utils::unzip(file, files = expected, exdir = folder)
@@ -94,7 +94,7 @@ read_superdf <- function(file, max_bytes = 256 * 1024^2) {
   .assert(
     length(manifest) == 2L &&
       setequal(names(manifest), c("format", "sha256")) &&
-      identical(manifest$format, "superdf-bundle/1"),
+      identical(manifest$format, "studyframe-bundle/1"),
     "Unsupported bundle manifest."
   )
   payloads <- setdiff(expected, "manifest.json")
@@ -120,19 +120,19 @@ read_superdf <- function(file, max_bytes = 256 * 1024^2) {
   )
   data <- as.data.frame(arrow::read_parquet(file.path(folder, "data.parquet")))
   ref <- as.data.frame(arrow::read_parquet(file.path(folder, "roster.parquet")))
-  out <- .new_superdf(data, ctx, ref)
-  validate_superdf(out)
+  out <- .new_studyframe(data, ctx, ref)
+  validate_studyframe(out)
   out
 }
 
 #' Generate a readable codebook from the attached declarations
-#' @param x A superdf.
+#' @param x A studyframe.
 #' @param file Markdown destination, which must not already exist.
 #' @return The filename invisibly. The codebook is a view of the JSON context;
 #'   the bundle remains the complete machine-readable representation.
 #' @export
 write_codebook <- function(x, file) {
-  validate_superdf(x)
+  validate_studyframe(x)
   .assert(!file.exists(file), "Codebook destination exists.")
   ctx <- context(x)
   escape <- function(s) gsub("[\r\n]", " ", gsub("|", "\\|", s, fixed = TRUE))

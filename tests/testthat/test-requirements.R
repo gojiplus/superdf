@@ -2,7 +2,7 @@ test_that("response imports cannot acquire complete randomized-roster claims imp
   original <- reference_workflows()$experiment
   d <- as.data.frame(original)
   a <- context(original)$assignments
-  received <- superdf(
+  received <- studyframe(
     d,
     "id",
     "pupil",
@@ -20,9 +20,9 @@ test_that("response imports cannot acquire complete randomized-roster claims imp
   expect_equal(checked$issues[[1]]$code, "randomized_roster_required")
   condition <- tryCatch(
     run_analysis(received, request),
-    superdf_analysis_error = identity
+    studyframe_analysis_error = identity
   )
-  expect_s3_class(condition, "superdf_analysis_error")
+  expect_s3_class(condition, "studyframe_analysis_error")
   expect_equal(condition$issues, checked$issues)
   expect_true(check_analysis(original, request)$ok)
   expect_equal(
@@ -30,7 +30,7 @@ test_that("response imports cannot acquire complete randomized-roster claims imp
     "asserted_complete"
   )
   expect_error(
-    superdf(
+    studyframe(
       d,
       "id",
       "pupil",
@@ -63,7 +63,7 @@ test_that("evidence identities and variable instrument references are preserved"
     version = "v1",
     description = "Changed coding without publishing"
   )
-  x <- superdf(
+  x <- studyframe(
     d,
     "id",
     "person",
@@ -85,11 +85,11 @@ test_that("evidence identities and variable instrument references are preserved"
   conflict$sha256 <- strrep("c", 64)
   expect_error(attach_evidence(x, list(conflict)), "Conflicting evidence")
   expect_error(
-    superdf(d, "id", "person", "duplicates", evidence = list(first, conflict)),
+    studyframe(d, "id", "person", "duplicates", evidence = list(first, conflict)),
     "Duplicate evidence"
   )
   expect_error(
-    superdf(
+    studyframe(
       d,
       "id",
       "person",
@@ -171,12 +171,12 @@ test_that("checks share preparation and identify changed revisions", {
   expect_false(identical(rejected$input_digest, checked$input_digest))
   condition <- tryCatch(
     run_analysis(changed, request),
-    superdf_analysis_error = identity
+    studyframe_analysis_error = identity
   )
   expect_equal(condition$issues, rejected$issues)
   planned <- context(x)$weights
   planned[[1]]$phase <- "planned"
-  plan <- superdf(
+  plan <- studyframe(
     as.data.frame(x),
     "id",
     "pupil",
@@ -204,7 +204,7 @@ test_that("insufficient independent assignment replication is rejected before fi
     assignment <- ctx$assignments[[1]]
     assignment$unit <- "id"
     assignment["blocks"] <- list(blocks)
-    superdf(
+    studyframe(
       data.frame(
         id = seq_along(values),
         offer = rep(0:1, length.out = length(values)),
@@ -233,7 +233,7 @@ test_that("insufficient independent assignment replication is rejected before fi
     )
     rejected <- tryCatch(
       run_analysis(study, request),
-      superdf_analysis_error = identity
+      studyframe_analysis_error = identity
     )
     expect_equal(rejected$issues, checked$issues)
   }

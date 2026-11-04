@@ -16,14 +16,14 @@ hash alongside the collection manifest and use it as `expected_qsf_sha256`.
 
 Export responses using numeric values and stable internal identifiers. Qualtrics
 CSV exports commonly have three header rows: export tags, question labels, and
-JSON `ImportId` values. SuperDF uses `ImportId`, so editing a display label does not
+JSON `ImportId` values. studyframe uses `ImportId`, so editing a display label does not
 silently change question identity. Single-header CSVs with those same import IDs
 are also accepted. IDs are normalized into schema-compatible column names;
 normalization collisions fail. Response IDs must be unique. Duplicate submissions
 for a roster unit fail until the study supplies an explicit resolution rule.
 
 ```r
-library(superdf)
+library(studyframe)
 
 study <- read_qualtrics(
   "responses.csv", "instrument.qsf",
@@ -35,10 +35,10 @@ study <- read_qualtrics(
 )
 check_analysis(study, analysis_request("effect", "QID1", assignment = "offer_assignment"))
 result <- estimate_effect(study, "QID1", "offer_assignment")
-write_superdf(study, "collected.superdf")
+write_studyframe(study, "collected.studyframe")
 ```
 
-`assignment_roster` is a SuperDF with a realized assignment declaration, source
+`assignment_roster` is a studyframe with a realized assignment declaration, source
 evidence, and a declared complete randomized roster scoped to that assignment.
 The join retains every roster unit and its original assignment. Unknown incoming
 units, mismatched key types, repeated submissions, and attempted overwrites fail.
@@ -51,7 +51,7 @@ shuffled response order, import, portable bundle round-trip, codebook, and an
 `estimatr` analysis:
 
 ```r
-source(system.file("examples", "qualtrics_workflow.R", package = "superdf"))
+source(system.file("examples", "qualtrics_workflow.R", package = "studyframe"))
 result <- run_qualtrics_workflow("qualtrics-example")
 result$analysis$fit
 ```
@@ -105,7 +105,7 @@ analysis-specific requirements decide whether a requested analysis is supported.
 ## Existing API workflows
 
 Use `qualtRics` to retrieve responses, with its existing authentication and retry
-behavior. SuperDF adds no HTTP or credential client. With credentials already
+behavior. studyframe adds no HTTP or credential client. With credentials already
 registered using `qualtRics`, capture the unconverted numeric export locally:
 
 ```r

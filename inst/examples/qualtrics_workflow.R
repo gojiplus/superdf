@@ -10,7 +10,7 @@ run_qualtrics_workflow <- function(directory, seed = 913L) {
   roster_file <- file.path(directory, "assignment.csv")
   utils::write.csv(roster_data, roster_file, row.names = FALSE)
   assignment_hash <- digest::digest(file = roster_file, algo = "sha256")
-  roster <- superdf(
+  roster <- studyframe(
     roster_data,
     "unit_id",
     "person",
@@ -35,13 +35,13 @@ run_qualtrics_workflow <- function(directory, seed = 913L) {
       "assignment_file",
       normalizePath(roster_file),
       assignment_hash,
-      producer = "SuperDF synthetic example",
+      producer = "studyframe synthetic example",
       description = paste("Generated complete roster; seed", seed)
     ))
   )
   instrument <- list(
     SurveyEntry = list(
-      SurveyID = "SV_SUPERDF_EXAMPLE",
+      SurveyID = "SV_STUDYFRAME_EXAMPLE",
       SurveyName = "Synthetic outcome collection"
     ),
     SurveyElements = list(list(
@@ -104,12 +104,12 @@ run_qualtrics_workflow <- function(directory, seed = 913L) {
     respondent_key = "unit_id",
     column_types = c(unit_id = "integer", QID1 = "number"),
     expected_qsf_sha256 = collection_hash,
-    expected_survey_id = "SV_SUPERDF_EXAMPLE",
+    expected_survey_id = "SV_STUDYFRAME_EXAMPLE",
     instrument_version = "synthetic-collection-v1"
   )
-  bundle <- file.path(directory, "study.superdf")
-  write_superdf(study, bundle)
-  received <- read_superdf(bundle)
+  bundle <- file.path(directory, "study.studyframe")
+  write_studyframe(study, bundle)
+  received <- read_studyframe(bundle)
   write_codebook(received, file.path(directory, "codebook.md"))
   result <- estimate_effect(received, "QID1", "offer_assignment")
   saveRDS(result, file.path(directory, "analysis.rds"))

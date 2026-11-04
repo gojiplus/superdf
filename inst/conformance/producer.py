@@ -1,4 +1,4 @@
-"""Produce a fixed conformance bundle using Arrow and JSON, without SuperDF."""
+"""Produce a fixed conformance bundle using Arrow and JSON, without studyframe."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ def write_example(destination: str | Path, context: dict | None = None) -> Path:
         "context.json": json.dumps(context, ensure_ascii=False).encode("utf-8"),
     }
     manifest = {
-        "format": "superdf-bundle/1",
+        "format": "studyframe-bundle/1",
         "sha256": {
             name: hashlib.sha256(blob).hexdigest() for name, blob in payloads.items()
         },

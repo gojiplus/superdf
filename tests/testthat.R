@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(superdf)
+library(studyframe)
 
-test_check("superdf")
+test_check("studyframe")

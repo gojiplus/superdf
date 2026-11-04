@@ -1,6 +1,6 @@
 #' @export
-`[.superdf` <- function(x, i, j, drop = FALSE) {
-  validate_superdf(x)
+`[.studyframe` <- function(x, i, j, drop = FALSE) {
+  validate_studyframe(x)
   .assert(
     identical(drop, FALSE),
     "Use as.data.frame(x) to explicitly extract data without context."
@@ -27,36 +27,36 @@
     nrow(result),
     attr(x, "seal")
   )
-  out <- .new_superdf(result, ctx, attr(x, "reference"))
-  validate_superdf(out)
+  out <- .new_studyframe(result, ctx, attr(x, "reference"))
+  validate_studyframe(out)
   out
 }
 
 .mutation_error <- function() {
   stop(
-    "Use derive_superdf(), rename_superdf(), or an explicit new dataset; direct mutation is unsupported.",
+    "Use derive_studyframe(), rename_studyframe(), or an explicit new dataset; direct mutation is unsupported.",
     call. = FALSE
   )
 }
 
 #' @export
-`[<-.superdf` <- function(x, i, j, ..., value) .mutation_error()
+`[<-.studyframe` <- function(x, i, j, ..., value) .mutation_error()
 #' @export
-`[[<-.superdf` <- function(x, ..., value) .mutation_error()
+`[[<-.studyframe` <- function(x, ..., value) .mutation_error()
 #' @export
-`$<-.superdf` <- function(x, name, value) .mutation_error()
+`$<-.studyframe` <- function(x, name, value) .mutation_error()
 #' @export
-`names<-.superdf` <- function(x, value) .mutation_error()
+`names<-.studyframe` <- function(x, value) .mutation_error()
 #' @export
-`dimnames<-.superdf` <- function(x, value) .mutation_error()
+`dimnames<-.studyframe` <- function(x, value) .mutation_error()
 
 #' Rename columns while retaining their scientific identities
-#' @param x A superdf.
+#' @param x A studyframe.
 #' @param names Named character vector: old column names as names, new names as values.
-#' @return A superdf with updated column mappings and history.
+#' @return A studyframe with updated column mappings and history.
 #' @export
-rename_superdf <- function(x, names) {
-  validate_superdf(x)
+rename_studyframe <- function(x, names) {
+  validate_studyframe(x)
   .assert(
     is.character(names) &&
       !is.null(base::names(names)) &&
@@ -93,22 +93,22 @@ rename_superdf <- function(x, names) {
     nrow(x),
     attr(x, "seal")
   )
-  out <- .new_superdf(data, ctx, ref)
-  validate_superdf(out)
+  out <- .new_studyframe(data, ctx, ref)
+  validate_studyframe(out)
   out
 }
 
 #' Add a derived variable with its definition
-#' @param x A superdf.
+#' @param x A studyframe.
 #' @param variable A variable_spec for a new variable.
 #' @param values Values in current row order, exactly one per row.
 #' @param inputs Stable identifiers of input variables.
 #' @param description Human-readable derivation; arbitrary code is not evaluated.
-#' @return A superdf. Roster rows outside the current view receive NA for the new
+#' @return A studyframe. Roster rows outside the current view receive NA for the new
 #'   measurement. Existing measurements and collection facts cannot be overwritten.
 #' @export
-derive_superdf <- function(x, variable, values, inputs, description) {
-  validate_superdf(x)
+derive_studyframe <- function(x, variable, values, inputs, description) {
+  validate_studyframe(x)
   ctx <- context(x)
   .assert(
     length(description) == 1L && nzchar(description),
@@ -148,27 +148,31 @@ derive_superdf <- function(x, variable, values, inputs, description) {
     inputs,
     variable$id
   )
-  out <- .new_superdf(data, ctx, ref)
-  validate_superdf(out)
+  out <- .new_studyframe(data, ctx, ref)
+  validate_studyframe(out)
   out
 }
 
 #' Join measurements without multiplying observational units
-#' @param x A superdf.
+#' @param x A studyframe.
 #' @param y A data.frame of additional measurements.
 #' @param by Column names present in both inputs. The right-hand keys must be unique.
 #' @param variables Variable declarations for every additional column.
 #' @param source Description or identifier of the joined source.
-#' @return A superdf with a many-to-one left join applied to its full roster.
+#' @return A studyframe with a many-to-one left join applied to its full roster.
 #' @export
-join_superdf <- function(x, y, by, variables, source) {
-  validate_superdf(x)
+join_studyframe <- function(x, y, by, variables, source) {
+  validate_studyframe(x)
   .assert(
     is.data.frame(y) &&
       length(by) > 0L &&
       all(by %in% names(y)) &&
       all(by %in% names(x)),
     "Join keys must exist in both inputs."
+  )
+  .assert(
+    !anyDuplicated(names(y)) && !anyNA(names(y)) && all(nzchar(names(y))),
+    "Right-hand columns must have unique, nonempty names."
   )
   .assert(
     !anyNA(y[by]) && !anyDuplicated(y[by]),
@@ -198,19 +202,16 @@ join_superdf <- function(x, y, by, variables, source) {
     )),
     "Join key storage types must agree; convert explicitly before joining."
   )
-  # A many-to-one join permits repeated left keys, so match row tuples directly.
-  tuples <- function(d) {
-    do.call(
-      paste,
-      c(
-        lapply(d[by], function(v) {
-          paste0(nchar(as.character(v), type = "bytes"), ":", v)
-        }),
-        sep = "|"
-      )
-    )
-  }
-  positions <- match(tuples(ref), tuples(y))
+  # Match typed values before constructing tuples; printing doubles loses precision.
+  key_codes <- lapply(by, function(key) {
+    values <- c(ref[[key]], y[[key]])
+    match(values, values)
+  })
+  tuples <- do.call(paste, c(key_codes, sep = "|"))
+  positions <- match(
+    tuples[seq_len(nrow(ref))],
+    tuples[nrow(ref) + seq_len(nrow(y))]
+  )
   current <- match(.keys(.plain(x), ctx), .keys(ref, ctx))
   data <- .plain(x)
   for (v in variables) {
@@ -228,19 +229,19 @@ join_superdf <- function(x, y, by, variables, source) {
     attr(x, "seal"),
     outputs = vapply(variables, function(v) v$id, character(1))
   )
-  out <- .new_superdf(data, ctx, ref)
-  validate_superdf(out)
+  out <- .new_studyframe(data, ctx, ref)
+  validate_studyframe(out)
   out
 }
 
 #' @export
-rbind.superdf <- function(..., deparse.level = 1) {
+rbind.studyframe <- function(..., deparse.level = 1) {
   xs <- list(...)
   .assert(
-    all(vapply(xs, inherits, logical(1), "superdf")),
-    "Bind only SuperDF views of the same collection."
+    all(vapply(xs, inherits, logical(1), "studyframe")),
+    "Bind only studyframe views of the same collection."
   )
-  lapply(xs, validate_superdf)
+  lapply(xs, validate_studyframe)
   x <- xs[[1]]
   comparable <- function(z) {
     ctx <- context(z)
@@ -267,28 +268,28 @@ rbind.superdf <- function(..., deparse.level = 1) {
     nrow(data),
     vapply(xs, function(z) attr(z, "seal"), character(1))
   )
-  out <- .new_superdf(data, ctx, attr(x, "reference"))
-  validate_superdf(out)
+  out <- .new_studyframe(data, ctx, attr(x, "reference"))
+  validate_studyframe(out)
   out
 }
 
 #' @export
-cbind.superdf <- function(..., deparse.level = 1) {
+cbind.studyframe <- function(..., deparse.level = 1) {
   stop(
-    "Use join_superdf() with explicit keys and measurement definitions.",
+    "Use join_studyframe() with explicit keys and measurement definitions.",
     call. = FALSE
   )
 }
 #' @export
-merge.superdf <- function(x, y, ...) {
+merge.studyframe <- function(x, y, ...) {
   stop(
-    "Use join_superdf() with explicit keys and measurement definitions.",
+    "Use join_studyframe() with explicit keys and measurement definitions.",
     call. = FALSE
   )
 }
 #' @export
 #' @importFrom stats aggregate
-aggregate.superdf <- function(x, ...) {
+aggregate.studyframe <- function(x, ...) {
   stop(
     "Aggregation changes the observational unit. Extract data explicitly and declare the resulting dataset and design.",
     call. = FALSE

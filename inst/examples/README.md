@@ -1,7 +1,7 @@
 # Simulated collection through inference
 
 `simulated_study.R` exercises actual stochastic collection, rather than filling a
-table with fixed example values. Load SuperDF and source this file, then run
+table with fixed example values. Load studyframe and source this file, then run
 `run_simulated_study("simulation", repetitions = 500L)` with a new output directory.
 For development, use `pkgload::load_all()` and source the file from the checkout.
 
@@ -36,7 +36,7 @@ With the constant effect used here, the roster effect is two in every repetition
 
 ## Outputs and interpretation
 
-The output directory contains a reusable `collected.superdf` bundle, a generated
+The output directory contains a reusable `collected.studyframe` bundle, a generated
 `codebook.md`, the single-run estimates in `single_run.csv`, and `analysis.rds`
 containing fits and context. `replications.csv` contains every repeated estimate;
 `summary.csv` reports bias, its Monte Carlo standard error, empirical standard

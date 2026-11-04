@@ -7,13 +7,15 @@
 run_analysis(x, request)
 }
 \arguments{
-\item{x}{A superdf.}
+\item{x}{A studyframe.}
 
 \item{request}{An analysis_request.}
 }
 \value{
-A superdf_result containing the native fit, analysis receipt, and context.
-Failure raises a superdf_analysis_error condition with structured issues.
+A studyframe_result containing the native fit, analysis receipt, and context.
+Failure raises a studyframe_analysis_error condition with structured issues.
+Undefined estimates, uncertainty, or intervals raise an inference_unavailable
+issue instead of returning a successful analysis receipt.
 }
 \description{
 Fit a supported request after preparing its declared design

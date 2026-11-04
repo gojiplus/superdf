@@ -38,7 +38,7 @@ analysis_issue <- function(
       call = NULL,
       issues = issues
     ),
-    class = c("superdf_analysis_error", "error", "condition")
+    class = c("studyframe_analysis_error", "error", "condition")
   )
   stop(condition)
 }
@@ -147,7 +147,7 @@ analysis_request <- function(
   }
   valid <- tryCatch(
     {
-      validate_superdf(x)
+      validate_studyframe(x)
       NULL
     },
     error = identity
@@ -268,10 +268,10 @@ analysis_request <- function(
         .prepare_effect(x, request$outcome, request$assignment)
       }
     },
-    superdf_analysis_error = identity,
+    studyframe_analysis_error = identity,
     error = identity
   )
-  if (inherits(prepared, "superdf_analysis_error")) {
+  if (inherits(prepared, "studyframe_analysis_error")) {
     return(list(ok = FALSE, issues = prepared$issues))
   }
   if (inherits(prepared, "error")) {
@@ -290,7 +290,7 @@ analysis_request <- function(
 }
 
 #' Check requirements without fitting an outcome model
-#' @param x A superdf.
+#' @param x A studyframe.
 #' @param request An analysis_request.
 #' @return A list with ok, issues, request, and input_digest. Survey designs may be
 #'   constructed, but no mean or effect estimator is called. Scientific assertions
@@ -306,11 +306,62 @@ check_analysis <- function(x, request) {
   )
 }
 
+.validate_inference <- function(fit, request, prepared) {
+  scalar <- function(value) {
+    is.numeric(value) && length(value) == 1L && is.finite(value)
+  }
+  estimate <- stats::coef(fit)
+  if (request$kind == "mean") {
+    standard_error <- as.numeric(survey::SE(fit))
+    df <- prepared$analysis$design_df
+  } else {
+    standard_error <- fit$std.error
+    df <- fit$df
+  }
+  require_inference <- function(ok) {
+    .need(
+      ok,
+      "The backend could not provide finite estimates and uncertainty for the declared inference.",
+      code = "inference_unavailable",
+      category = "unsupported",
+      path = request$outcome,
+      remedy = paste(
+        "Review outcome variation, numerical scale, and independent replication;",
+        "no valid interval is available from this adapter."
+      )
+    )
+  }
+  require_inference(
+    scalar(estimate) &&
+      scalar(standard_error) &&
+      standard_error >= 0 &&
+      scalar(df) &&
+      df > 0
+  )
+  interval <- if (request$kind == "mean") {
+    stats::confint(fit, level = 0.95, df = df)
+  } else {
+    require_inference(
+      scalar(fit$p.value) && fit$p.value >= 0 && fit$p.value <= 1
+    )
+    c(fit$conf.low, fit$conf.high)
+  }
+  require_inference(
+    is.numeric(interval) &&
+      length(interval) == 2L &&
+      all(is.finite(interval)) &&
+      interval[[1]] <= interval[[2]]
+  )
+  invisible(TRUE)
+}
+
 #' Fit a supported request after preparing its declared design
-#' @param x A superdf.
+#' @param x A studyframe.
 #' @param request An analysis_request.
-#' @return A superdf_result containing the native fit, analysis receipt, and context.
-#'   Failure raises a superdf_analysis_error condition with structured issues.
+#' @return A studyframe_result containing the native fit, analysis receipt, and context.
+#'   Failure raises a studyframe_analysis_error condition with structured issues.
+#'   Undefined estimates, uncertainty, or intervals raise an inference_unavailable
+#'   issue instead of returning a successful analysis receipt.
 #' @export
 run_analysis <- function(x, request) {
   checked <- .prepare_request(x, request)
@@ -347,6 +398,7 @@ run_analysis <- function(x, request) {
       ))
     }
   )
+  .validate_inference(fit, request, prepared)
   analysis <- prepared$analysis
   ctx <- context(x)
   analysis$request <- request
@@ -391,14 +443,14 @@ run_analysis <- function(x, request) {
 }
 
 #' Estimate a mean using a declared survey design
-#' @param x A superdf.
+#' @param x A studyframe.
 #' @param outcome Stable numeric outcome identifier.
 #' @param weight Explicit weight declaration identifier.
 #' @param domain Interpret a restricted view as a population domain.
 #' @param missing fail or omit. Omission is recorded and does not justify nonresponse assumptions.
-#' @return A superdf_result; uses the same requirements as check_analysis.
+#' @return A studyframe_result; uses the same requirements as check_analysis.
 #'   Its receipt specifies 95 percent Student t intervals using the design degrees
-#'   of freedom. Obtain those intervals with stats::confint(result$fit,
+#'   of freedom, which must be positive and finite. Obtain those intervals with stats::confint(result$fit,
 #'   df = result$analysis$design_df); survey's default confint uses normal intervals.
 #' @export
 estimate_mean <- function(
@@ -421,10 +473,10 @@ estimate_mean <- function(
 }
 
 #' Estimate an effect on a declared complete randomized roster
-#' @param x A superdf with a sourced asserted-complete randomized roster.
+#' @param x A studyframe with a sourced asserted-complete randomized roster.
 #' @param outcome Stable numeric outcome identifier.
 #' @param assignment Explicit assignment declaration identifier.
-#' @return A superdf_result. Supports two-arm complete randomization, including
+#' @return A studyframe_result. Supports two-arm complete randomization, including
 #'   blocks and clusters, with constant probability and complete outcomes.
 #' @export
 estimate_effect <- function(x, outcome, assignment) {

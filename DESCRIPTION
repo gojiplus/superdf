@@ -1,4 +1,4 @@
-Package: superdf
+Package: studyframe
 Title: Data Frames with Collection Context
 Version: 0.3.0
 Authors@R: 
@@ -21,14 +21,17 @@ Imports:
 Suggests: 
     arrow,
     estimatr,
+    knitr,
     lintr,
     pkgload,
     rcmdcheck,
     roxygen2,
+    rmarkdown,
     survey,
     zip,
     testthat (>= 3.1.5)
 Config/testthat/edition: 3
+VignetteBuilder: knitr
 URL: https://soodoku.github.io/superdf/, https://github.com/soodoku/superdf
 BugReports: https://github.com/soodoku/superdf/issues
 Config/roxygen2/version: 8.0.0

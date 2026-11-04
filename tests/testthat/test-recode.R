@@ -1,12 +1,12 @@
 test_that("typed recoding keeps source measurements and records its definition", {
-  x <- superdf(
+  x <- studyframe(
     data.frame(id = 1:4, answer = c(1L, 2L, -9L, NA_integer_)),
     "id",
     "person",
     "codes"
   )
   view <- x[1:3, ]
-  y <- recode_superdf(
+  y <- recode_studyframe(
     view,
     variable_spec("yes"),
     "answer",
@@ -21,12 +21,12 @@ test_that("typed recoding keeps source measurements and records its definition",
   expect_identical(event$inputs, list("answer"))
   expect_identical(event$outputs, list("yes"))
   expect_match(event$details, "refused stays missing", fixed = TRUE)
-  expect_true(validate_superdf(y))
+  expect_true(validate_studyframe(y))
 })
 
 test_that("keeping unmapped missing codes cannot turn them into measurements", {
   missing <- list(list(value = -99, reason = "refused"))
-  x <- superdf(
+  x <- studyframe(
     data.frame(id = 1:3, answer = c(1, -99, 3)),
     "id",
     "person",
@@ -34,7 +34,7 @@ test_that("keeping unmapped missing codes cannot turn them into measurements", {
     variables = list(variable_spec("answer", missing = missing))
   )
   expect_error(
-    recode_superdf(
+    recode_studyframe(
       x,
       variable_spec("new"),
       "answer",
@@ -45,7 +45,7 @@ test_that("keeping unmapped missing codes cannot turn them into measurements", {
     ),
     "original missing declarations"
   )
-  kept <- recode_superdf(
+  kept <- recode_studyframe(
     x,
     variable_spec("new", missing = missing),
     "answer",
@@ -56,7 +56,7 @@ test_that("keeping unmapped missing codes cannot turn them into measurements", {
   )
   expect_identical(kept$new, c(10, -99, 3))
   expect_identical(context(kept)$variables[[3]]$missing, missing)
-  mapped <- recode_superdf(
+  mapped <- recode_studyframe(
     x,
     variable_spec("new"),
     "answer",
@@ -69,14 +69,14 @@ test_that("keeping unmapped missing codes cannot turn them into measurements", {
 })
 
 test_that("unmapped codes and type coercion require explicit decisions", {
-  x <- superdf(
+  x <- studyframe(
     data.frame(id = 1:3, answer = c(1L, 2L, NA_integer_)),
     "id",
     "person",
     "codes"
   )
   recode <- function(from, to, unmatched = "error") {
-    recode_superdf(
+    recode_studyframe(
       x,
       variable_spec("new"),
       "answer",

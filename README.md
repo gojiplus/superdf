@@ -1,6 +1,6 @@
-# SuperDF: data with collection context
+# studyframe: data with collection context
 
-SuperDF keeps observations together with the information needed to interpret them:
+studyframe keeps observations together with the information needed to interpret them:
 observational units, measurements, sampling, weights, assignment, and derivations.
 An analysis selects the relevant declarations and checks its requirements before
 calling an established statistical package.
@@ -10,10 +10,38 @@ It implements a bounded schema and tested adapters, not a complete scientific
 metadata standard. A well-formed declaration does not establish that its scientific
 claims or identification assumptions are true.
 
+The R package is now named **studyframe**, formerly SuperDF. The GitHub repository
+currently retains its original name. This development revision is not on CRAN.
+
+## Install the R package
+
+From a local checkout:
+
+```sh
+R CMD INSTALL .
+```
+
+```r
+library(studyframe)
+```
+
+The core package declares and validates data and context. Install `survey` for
+survey analysis, `estimatr` for experimental analysis, and `arrow` plus `zip` for
+portable bundle I/O:
+
+```r
+install.packages(c("survey", "estimatr", "arrow", "zip"))
+```
+
+The [collection-to-inference vignette](vignettes/collection-to-inference.Rmd)
+executes a complete simulated handoff. Schema 0.3 and `.studyframe` bundles are
+experimental; this rename does not provide compatibility aliases for the earlier
+unreleased API or bundle format.
+
 ## Declare once, use across analyses
 
 ```r
-library(superdf)
+library(studyframe)
 
 observations <- data.frame(
   id = 1:8,
@@ -23,7 +51,7 @@ observations <- data.frame(
   income = c(12, 15, 18, 11, 20, 24, 16, 22)
 )
 
-study <- superdf(
+study <- studyframe(
   observations,
   keys = "id",
   unit = "pupil",
@@ -57,7 +85,7 @@ stays unknown; it does not silently become simple random sampling.
 district_one <- study[study$district == 1, ]
 estimate_mean(district_one, "income", "main", domain = TRUE)
 
-renamed <- rename_superdf(study, c(income = "monthly_income"))
+renamed <- rename_studyframe(study, c(income = "monthly_income"))
 estimate_mean(renamed, "income", "main")
 ```
 
@@ -69,10 +97,10 @@ analyst declaration, not a claim that any arbitrary restriction is ignorable.
 not a redacted release. To distribute fewer original records, explicitly construct
 a new dataset and reconsider its design declarations.
 
-`derive_superdf()` adds a defined measurement without overwriting original facts.
-`recode_superdf()` records an explicit value mapping into a new measurement and
+`derive_studyframe()` adds a defined measurement without overwriting original facts.
+`recode_studyframe()` records an explicit value mapping into a new measurement and
 requires a policy for unmapped values.
-`join_superdf()` requires keys and a unique right-hand match. `rbind()` accepts
+`join_studyframe()` requires keys and a unique right-hand match. `rbind()` accepts
 disjoint views of the same collection; it rejects incompatible collections.
 Aggregation requires an explicit new observational unit and dataset. Direct
 replacement operations are refused, and adapter-time validation detects mutations
@@ -89,8 +117,8 @@ measurements to question and subquestion IDs. Unknown facts remain unknown;
 planned sampling or assignment declarations cannot stand in for realized designs.
 
 ```r
-write_superdf(study, "study.superdf")
-received <- read_superdf("study.superdf")
+write_studyframe(study, "study.studyframe")
+received <- read_studyframe("study.studyframe")
 write_codebook(received, "codebook.md")
 ```
 
@@ -103,9 +131,9 @@ is the cross-language format. Bare data extraction is explicit:
 The Python reader uses the same schema and validates references and row alignment:
 
 ```python
-from superdf import read_superdf
+from studyframe import read_studyframe
 
-study = read_superdf("study.superdf")
+study = read_studyframe("study.studyframe")
 study.validate()
 observations = study.data.to_pandas()
 print(study.context["weights"])
@@ -176,7 +204,7 @@ Factors, dates, nested columns, infinity, and NaN require explicit conversion.
 Numeric missing codes remain in storage and are converted only for analysis.
 `missing = "omit"` records an omission; it does not justify a nonresponse assumption.
 Unsupported dataframe libraries may drop the class or alter its contents; only
-documented SuperDF operations provide the preservation contract.
+documented studyframe operations provide the preservation contract.
 
 See the [schema and requirements](https://github.com/soodoku/superdf/blob/main/inst/schema/README.md),
 [four reproducible workflows](https://github.com/soodoku/superdf/blob/main/inst/examples/workflows.R), and
@@ -203,7 +231,7 @@ direct backend calls and deliberately break alignment and applicability.
 For a stochastic collection-to-inference demonstration, run:
 
 ```r
-source(system.file("examples", "simulated_study.R", package = "superdf"))
+source(system.file("examples", "simulated_study.R", package = "studyframe"))
 run_simulated_study("simulation", repetitions = 500L)
 ```
 

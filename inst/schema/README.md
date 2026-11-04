@@ -1,7 +1,7 @@
 # Collection context schema 0.3.0
 
 The objective is to preserve the relationship between observations and the
-inferences they support. SuperDF carries facts and assumptions with data; analysis
+inferences they support. studyframe carries facts and assumptions with data; analysis
 requests determine which declarations are needed. Structural validity, consistency
 with observations, and sufficiency for a particular analysis are separate checks.
 
@@ -101,7 +101,7 @@ corruption; semantic validation is still required after hash verification.
 Operation parent fingerprints and result input fingerprints use SHA-256 over R
 serialization version 2. They identify the R object used at that step, not a
 cross-language canonical representation or a bundle checksum. Results also retain
-the backend, SuperDF, and R versions.
+the backend, studyframe, and R versions.
 
 ## Adapter boundary
 
@@ -138,7 +138,7 @@ automatically. The current effect target is the randomized roster.
 | Join | Many-to-one left join on explicit, type-compatible keys; declare every new measurement; apply to full roster |
 | Bind | Only disjoint views of the same context and roster; incompatible collections require a new explicit declaration |
 | Aggregate | Refuse implicit preservation; require explicit construction at the new observational unit |
-| Unknown mutation | Refuse if detected; ordinary non-SuperDF extraction makes loss of the contract explicit |
+| Unknown mutation | Refuse if detected; ordinary non-studyframe extraction makes loss of the contract explicit |
 
 The implementation deliberately does not claim preservation through arbitrary
 dplyr, data.table, or pandas operations. It does not model general relational
@@ -166,7 +166,7 @@ are invalid, missing, choice, unsupported, and dependency. Independent missing
 outcome/design/roster requirements are reported together; design preparation can
 then report a typed requirement or a backend preparation error. A numerical backend
 failure during estimation remains possible and is reported as a typed issue.
-Estimation raises `superdf_analysis_error` with its issue records. Consumers must
+Estimation raises `studyframe_analysis_error` with its issue records. Consumers must
 not derive codes by parsing English messages.
 
 Receipts retain the request, selected declarations, roster assertion, source records,

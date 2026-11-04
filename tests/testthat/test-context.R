@@ -1,18 +1,18 @@
 test_that("schema and semantic validation distinguish incomplete from inconsistent", {
-  x <- superdf(data.frame(id = 1:3, y = c(1, NA, 3)), "id", "person", "unknown")
-  expect_true(validate_superdf(x))
+  x <- studyframe(data.frame(id = 1:3, y = c(1, NA, 3)), "id", "person", "unknown")
+  expect_true(validate_studyframe(x))
   expect_length(context(x)$sampling, 0)
   expect_identical(context(x)$variables[[2]]$status, "unknown")
   expect_error(
-    superdf(data.frame(id = c(1L, 1L)), "id", "person", "duplicates"),
+    studyframe(data.frame(id = c(1L, 1L)), "id", "person", "duplicates"),
     "Duplicate observation"
   )
   expect_error(
-    superdf(data.frame(id = c(1L, NA)), "id", "person", "missing"),
+    studyframe(data.frame(id = c(1L, NA)), "id", "person", "missing"),
     "nonmissing"
   )
   expect_error(
-    superdf(
+    studyframe(
       data.frame(id = 1:2),
       "id",
       "person",
@@ -25,7 +25,7 @@ test_that("schema and semantic validation distinguish incomplete from inconsiste
     "unknown variable"
   )
   expect_error(
-    superdf(
+    studyframe(
       data.frame(id = 1:2, f = factor(c("a", "b"))),
       "id",
       "person",
@@ -34,25 +34,25 @@ test_that("schema and semantic validation distinguish incomplete from inconsiste
     "primitive"
   )
   expect_error(
-    superdf(data.frame(id = 1:2, y = c(Inf, 0)), "id", "person", "infinite"),
+    studyframe(data.frame(id = 1:2, y = c(Inf, 0)), "id", "person", "infinite"),
     "Infinite"
   )
 })
 
 test_that("renames preserve identities and unsupported mutations cannot masquerade as valid", {
   x <- reference_workflows()$survey
-  y <- rename_superdf(x, c(id = "person_id", income = "monthly_income"))
+  y <- rename_studyframe(x, c(id = "person_id", income = "monthly_income"))
   expect_identical(context(y)$units$keys, list("id"))
   expect_identical(context(y)$variables[[1]]$id, context(x)$variables[[1]]$id)
-  expect_true(validate_superdf(y))
+  expect_true(validate_studyframe(y))
   expect_error(x$income <- x$income * 2, "direct mutation")
   expect_error(x[1, "income"] <- 10, "direct mutation")
   expect_error(names(x) <- names(x), "direct mutation")
   forged <- x
   class(forged) <- "data.frame"
   forged$income <- forged$income * 2
-  class(forged) <- c("superdf", "data.frame")
-  expect_error(validate_superdf(forged), "Unsupported mutation")
+  class(forged) <- c("studyframe", "data.frame")
+  expect_error(validate_studyframe(forged), "Unsupported mutation")
   expect_error(x[, c("income", "weight")], "keys must remain")
   expect_error(x[c(1, 1), ], "Duplicate observation")
 })
@@ -79,7 +79,7 @@ test_that("views preserve rosters and bindings require one compatible collection
 test_that("derived variables retain definitions without overwriting collection facts", {
   x <- reference_workflows()$survey
   view <- x[1:6, ]
-  y <- derive_superdf(
+  y <- derive_studyframe(
     view,
     variable_spec("annual_income", units = "USD/year"),
     view$income * 12,
@@ -90,7 +90,7 @@ test_that("derived variables retain definitions without overwriting collection f
   expect_true(all(is.na(collection_data(y)$annual_income[-(1:6)])))
   expect_equal(tail(context(y)$history, 1)[[1]]$operation, "derive")
   expect_error(
-    derive_superdf(x, variable_spec("income"), x$income, "income", "Overwrite"),
+    derive_studyframe(x, variable_spec("income"), x$income, "income", "Overwrite"),
     "new variable"
   )
 })
@@ -98,7 +98,7 @@ test_that("derived variables retain definitions without overwriting collection f
 test_that("joins use keys, preserve order, and refuse unit multiplication", {
   x <- reference_workflows()$survey
   lookup <- data.frame(school = c(8L, 2L, 1L), label = c("eight", "two", "one"))
-  joined <- join_superdf(
+  joined <- join_studyframe(
     x,
     lookup,
     "school",
@@ -108,7 +108,7 @@ test_that("joins use keys, preserve order, and refuse unit multiplication", {
   expect_equal(joined$label, lookup$label[match(x$school, lookup$school)])
   expect_equal(joined$id, x$id)
   expect_error(
-    join_superdf(
+    join_studyframe(
       x,
       rbind(lookup, lookup[1, ]),
       "school",
@@ -117,7 +117,7 @@ test_that("joins use keys, preserve order, and refuse unit multiplication", {
     ),
     "duplicate units"
   )
-  expect_true(validate_superdf(joined))
+  expect_true(validate_studyframe(joined))
 })
 
 test_that("typed applicability and assignment codes cannot coerce silently", {
@@ -128,7 +128,7 @@ test_that("typed applicability and assignment codes cannot coerce silently", {
     w = rep(1, 4)
   )
   expect_error(
-    superdf(
+    studyframe(
       d,
       "id",
       "person",
@@ -142,7 +142,7 @@ test_that("typed applicability and assignment codes cannot coerce silently", {
     "Applicability values"
   )
   expect_error(
-    superdf(
+    studyframe(
       d,
       "id",
       "person",
@@ -157,7 +157,7 @@ test_that("typed applicability and assignment codes cannot coerce silently", {
     "Assignment conditions"
   )
   expect_error(
-    superdf(
+    studyframe(
       d,
       "id",
       "person",
@@ -174,14 +174,14 @@ test_that("typed applicability and assignment codes cannot coerce silently", {
 test_that("operation and result provenance identifies exact inputs", {
   skip_if_not_installed("survey")
   x <- reference_workflows()$survey
-  y <- derive_superdf(
+  y <- derive_studyframe(
     x,
     variable_spec("double_income"),
     x$income * 2,
     "income",
     "Multiply by two"
   )
-  event <- tail(superdf::context(y)$history, 1)[[1]]
+  event <- tail(studyframe::context(y)$history, 1)[[1]]
   expect_identical(event$parents, list(attr(x, "seal")))
   expect_identical(event$inputs, list("income"))
   expect_identical(event$outputs, list("double_income"))

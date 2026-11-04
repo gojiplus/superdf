@@ -1,4 +1,4 @@
-These are synthetic fixtures authored for SuperDF under the repository's MIT
+These are synthetic fixtures authored for studyframe under the repository's MIT
 license. They are vendor-shaped examples, not customer exports or evidence of
 partner validation. No respondent data is included.
 

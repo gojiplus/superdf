@@ -63,13 +63,13 @@ instrument_ref <- function(source, question, subquestion = NULL) {
 }
 
 #' Attach attributed evidence and unresolved import diagnostics
-#' @param x A superdf.
+#' @param x A studyframe.
 #' @param evidence List of evidence_spec records. Reusing an ID with different content fails.
 #' @param diagnostics List of analysis_issue records.
-#' @return A new superdf revision. Existing evidence is never overwritten.
+#' @return A new studyframe revision. Existing evidence is never overwritten.
 #' @export
 attach_evidence <- function(x, evidence, diagnostics = list()) {
-  validate_superdf(x)
+  validate_studyframe(x)
   ctx <- context(x)
   for (item in evidence) {
     ids <- vapply(ctx$evidence, function(z) z$id, character(1))
@@ -92,7 +92,7 @@ attach_evidence <- function(x, evidence, diagnostics = list()) {
     nrow(x),
     attr(x, "seal")
   )
-  out <- .new_superdf(.plain(x), ctx, attr(x, "reference"))
-  validate_superdf(out)
+  out <- .new_studyframe(.plain(x), ctx, attr(x, "reference"))
+  validate_studyframe(out)
   out
 }

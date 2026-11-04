@@ -7,7 +7,7 @@
 estimate_mean(x, outcome, weight, domain = FALSE, missing = c("fail", "omit"))
 }
 \arguments{
-\item{x}{A superdf.}
+\item{x}{A studyframe.}
 
 \item{outcome}{Stable numeric outcome identifier.}
 
@@ -18,9 +18,9 @@ estimate_mean(x, outcome, weight, domain = FALSE, missing = c("fail", "omit"))
 \item{missing}{fail or omit. Omission is recorded and does not justify nonresponse assumptions.}
 }
 \value{
-A superdf_result; uses the same requirements as check_analysis.
+A studyframe_result; uses the same requirements as check_analysis.
 Its receipt specifies 95 percent Student t intervals using the design degrees
-of freedom. Obtain those intervals with stats::confint(result$fit,
+of freedom, which must be positive and finite. Obtain those intervals with stats::confint(result$fit,
 df = result$analysis$design_df); survey's default confint uses normal intervals.
 }
 \description{

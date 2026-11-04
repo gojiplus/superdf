@@ -7,14 +7,14 @@
 attach_evidence(x, evidence, diagnostics = list())
 }
 \arguments{
-\item{x}{A superdf.}
+\item{x}{A studyframe.}
 
 \item{evidence}{List of evidence_spec records. Reusing an ID with different content fails.}
 
 \item{diagnostics}{List of analysis_issue records.}
 }
 \value{
-A new superdf revision. Existing evidence is never overwritten.
+A new studyframe revision. Existing evidence is never overwritten.
 }
 \description{
 Attach attributed evidence and unresolved import diagnostics

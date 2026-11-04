@@ -7,7 +7,7 @@
 write_codebook(x, file)
 }
 \arguments{
-\item{x}{A superdf.}
+\item{x}{A studyframe.}
 
 \item{file}{Markdown destination, which must not already exist.}
 }

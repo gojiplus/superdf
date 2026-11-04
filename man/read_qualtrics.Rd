@@ -30,7 +30,7 @@ unless converted explicitly; instrument identity and coding remain unknown.}
 
 \item{unit}{Observational unit for an import without an authoritative roster.}
 
-\item{roster}{Optional authoritative superdf. Outcomes are left-joined to its
+\item{roster}{Optional authoritative studyframe. Outcomes are left-joined to its
 complete attached roster, never substituted for its sampling or assignment facts.}
 
 \item{respondent_key}{Import ID (or normalized column name) containing the
@@ -52,7 +52,7 @@ attributed information, not proof that respondents saw this version.}
 \item{expected_survey_id}{Optional expected survey ID, checked against the QSF.}
 }
 \value{
-A superdf with source evidence, question mappings, and import diagnostics.
+A studyframe with source evidence, question mappings, and import diagnostics.
 }
 \description{
 Reads a numeric-value CSV export and a QSF instrument snapshot. The supported

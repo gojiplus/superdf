@@ -2,11 +2,11 @@
 ^\.Rproj\.user$
 ^\.git$
 ^\.gitignore$
-^ecosystem_compatible_superdf\.py$
-^ecosystem_compatible_superdf\.R$
-^superdf\.ipynb$
-^superdf\.md$
-^superdf\.Rmd$
+^ecosystem_compatible_studyframe\.py$
+^ecosystem_compatible_studyframe\.R$
+^studyframe\.ipynb$
+^studyframe\.md$
+^studyframe\.Rmd$
 ^CLAUDE\.md$
 ^python$
 ^pyproject\.toml$
@@ -18,6 +18,8 @@
 ^\.lintr$
 ^build$
 ^dist$
+^.*\.tar\.gz$
+^.*\.Rcheck$
 ^Makefile$
 ^\.github$
 ^docs$

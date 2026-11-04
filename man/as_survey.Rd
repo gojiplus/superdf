@@ -7,7 +7,7 @@
 as_survey(x, weight, domain = FALSE)
 }
 \arguments{
-\item{x}{A superdf.}
+\item{x}{A studyframe.}
 
 \item{weight}{Identifier of a weight declaration; never chosen implicitly.}
 
@@ -16,7 +16,7 @@ domain. The backend design is constructed on the weight's full applicable
 roster before subsetting. This does not establish that a restriction is ignorable.}
 }
 \value{
-A survey.design or svyrep.design, with a superdf_analysis attribute.
+A survey.design or svyrep.design, with a studyframe_analysis attribute.
 Calling survey functions directly uses their own global options; estimate_mean
 applies the declared single-PSU policy and records it.
 }

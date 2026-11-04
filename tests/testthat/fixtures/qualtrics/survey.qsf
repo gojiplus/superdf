@@ -1,6 +1,6 @@
 {
   "SurveyEntry": {
-    "SurveyID": "SV_SUPERDF_FIXTURE",
+    "SurveyID": "SV_STUDYFRAME_FIXTURE",
     "SurveyName": "Synthetic import fixture"
   },
   "SurveyElements": [

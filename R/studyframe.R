@@ -1,8 +1,8 @@
 #' Data and the context needed to interpret it
-#' @description SuperDF binds observations, a collection roster, and portable
+#' @description studyframe binds observations, a collection roster, and portable
 #'   declarations. Supported operations update that context. Analysis adapters
 #'   check their own requirements; metadata is not a certificate of identification.
-#' @name superdf-package
+#' @name studyframe-package
 #' @keywords internal
 "_PACKAGE"
 
@@ -42,7 +42,7 @@
   system.file(
     "schema",
     "context.schema.json",
-    package = "superdf",
+    package = "studyframe",
     mustWork = TRUE
   )
 }
@@ -86,7 +86,7 @@
     serializeVersion = 2
   )
 }
-.new_superdf <- function(data, context, reference) {
+.new_studyframe <- function(data, context, reference) {
   data <- .plain(data)
   reference <- .plain(reference)
   rownames(data) <- NULL
@@ -94,7 +94,7 @@
   seal <- .seal(data, context, reference)
   structure(
     data,
-    class = c("superdf", "data.frame"),
+    class = c("studyframe", "data.frame"),
     context = context,
     reference = reference,
     seal = seal
@@ -139,15 +139,15 @@
 #' @param roster A roster_spec. Ordinary imports default to unknown completeness.
 #' @param evidence List of evidence_spec source records.
 #' @param diagnostics List of analysis_issue records retaining import uncertainty.
-#' @return A superdf inheriting from data.frame, with its original roster attached.
+#' @return A studyframe inheriting from data.frame, with its original roster attached.
 #' @export
 #' @examples
-#' x <- superdf(data.frame(id = 1:3, income = c(10, 20, 30)),
+#' x <- studyframe(data.frame(id = 1:3, income = c(10, 20, 30)),
 #'   keys = "id", unit = "person", dataset_id = "example"
 #' )
 #' x[c(3, 1), ]
 #' context(x)$units
-superdf <- function(
+studyframe <- function(
   data,
   keys,
   unit,
@@ -201,21 +201,21 @@ superdf <- function(
     evidence = .array(evidence),
     diagnostics = .array(diagnostics)
   )
-  x <- .new_superdf(data, ctx, data)
-  validate_superdf(x)
+  x <- .new_studyframe(data, ctx, data)
+  validate_studyframe(x)
   x
 }
 
 #' Inspect attached context and roster
-#' @param x A superdf.
+#' @param x A studyframe.
 #' @return context returns a list; collection_data returns the original roster with
 #'   supported derivations and renames applied. as.data.frame explicitly extracts
 #'   the current observations without metadata.
 #' @name context
 #' @export
 context <- function(x) {
-  if (!inherits(x, "superdf")) {
-    stop("Expected a superdf.", call. = FALSE)
+  if (!inherits(x, "studyframe")) {
+    stop("Expected a studyframe.", call. = FALSE)
   }
   attr(x, "context", exact = TRUE)
 }
@@ -223,22 +223,22 @@ context <- function(x) {
 #' @rdname context
 #' @export
 collection_data <- function(x) {
-  validate_superdf(x)
+  validate_studyframe(x)
   attr(x, "reference", exact = TRUE)
 }
 
 #' @export
-as.data.frame.superdf <- function(x, row.names = NULL, optional = FALSE, ...) {
+as.data.frame.studyframe <- function(x, row.names = NULL, optional = FALSE, ...) {
   .plain(x)
 }
 
 #' @export
-print.superdf <- function(x, ...) {
-  validate_superdf(x)
+print.studyframe <- function(x, ...) {
+  validate_studyframe(x)
   print(.plain(x), ...)
   ctx <- context(x)
   cat(
-    "\nSuperDF:",
+    "\nstudyframe:",
     ctx$dataset$id,
     "| unit:",
     ctx$units$observation,

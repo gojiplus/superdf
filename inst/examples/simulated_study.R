@@ -1,4 +1,4 @@
-# Source after loading superdf. Potential outcomes stay outside the released data.
+# Source after loading studyframe. Potential outcomes stay outside the released data.
 simulate_population <- function(seed = 812L) {
   set.seed(seed)
   school_effect <- rnorm(80, sd = 4)
@@ -38,7 +38,7 @@ collect_study <- function(population, seed = 9001L) {
   roster$school_population <- 40L
   roster$inclusion_probability <- 12 / 40
   roster$weight <- 1 / roster$inclusion_probability
-  study <- superdf(
+  study <- studyframe(
     roster,
     "id",
     "pupil",
@@ -54,7 +54,7 @@ collect_study <- function(population, seed = 9001L) {
     evidence = list(evidence_spec(
       "assignment_roster",
       "generated:assignment-roster",
-      producer = "SuperDF simulation",
+      producer = "studyframe simulation",
       description = "Full generated randomized roster; completeness asserted by generator"
     )),
     sampling = list(sampling_spec(
@@ -94,7 +94,7 @@ collect_study <- function(population, seed = 9001L) {
     followup = ifelse(roster$offer == 1L, sampled$y1, sampled$y0)
   )
   observed <- observed[sample.int(nrow(observed)), ]
-  join_superdf(
+  join_studyframe(
     study,
     observed,
     "id",
@@ -142,9 +142,9 @@ run_simulated_study <- function(directory, repetitions = 500L) {
   dir.create(directory, recursive = TRUE)
   population <- simulate_population()
   study <- collect_study(population)
-  bundle <- file.path(directory, "collected.superdf")
-  write_superdf(study, bundle)
-  received <- read_superdf(bundle)
+  bundle <- file.path(directory, "collected.studyframe")
+  write_studyframe(study, bundle)
+  received <- read_studyframe(bundle)
   write_codebook(received, file.path(directory, "codebook.md"))
   example <- analyze_study(received)
   truth <- c(mean(population$baseline), 2)
@@ -157,10 +157,10 @@ run_simulated_study <- function(directory, repetitions = 500L) {
   saveRDS(example, file.path(directory, "analysis.rds"))
   draws <- lapply(seq_len(repetitions), function(i) {
     collected <- collect_study(population, seed = 10000L + i)
-    path <- tempfile(fileext = ".superdf")
+    path <- tempfile(fileext = ".studyframe")
     on.exit(unlink(path), add = TRUE)
-    write_superdf(collected, path)
-    result <- analyze_study(read_superdf(path))$table
+    write_studyframe(collected, path)
+    result <- analyze_study(read_studyframe(path))$table
     result$truth <- truth
     result$replication <- i
     result$covered <- result$lower <= truth & result$upper >= truth

@@ -8,7 +8,7 @@
   )
   stop(structure(
     list(message = message, call = NULL, issues = list(issue)),
-    class = c("superdf_import_error", "error", "condition")
+    class = c("studyframe_import_error", "error", "condition")
   ))
 }
 
@@ -268,7 +268,7 @@
 #'   unless converted explicitly; instrument identity and coding remain unknown.
 #' @param dataset_id Dataset identifier; defaults to the QSF survey ID.
 #' @param unit Observational unit for an import without an authoritative roster.
-#' @param roster Optional authoritative superdf. Outcomes are left-joined to its
+#' @param roster Optional authoritative studyframe. Outcomes are left-joined to its
 #'   complete attached roster, never substituted for its sampling or assignment facts.
 #' @param respondent_key Import ID (or normalized column name) containing the
 #'   authoritative roster's single key. Required when roster is supplied.
@@ -282,7 +282,7 @@
 #' @param instrument_version Optional caller-supplied instrument version. It is
 #'   attributed information, not proof that respondents saw this version.
 #' @param expected_survey_id Optional expected survey ID, checked against the QSF.
-#' @return A superdf with source evidence, question mappings, and import diagnostics.
+#' @return A studyframe with source evidence, question mappings, and import diagnostics.
 #' @export
 read_qualtrics <- function(
   responses,
@@ -551,7 +551,7 @@ read_qualtrics <- function(
     variables[[i]] <- variable
   }
   if (is.null(roster)) {
-    return(superdf(
+    return(studyframe(
       data,
       keys = "response_id",
       unit = unit,
@@ -566,7 +566,7 @@ read_qualtrics <- function(
       )
     ))
   }
-  validate_superdf(roster)
+  validate_studyframe(roster)
   keys <- .strings(context(roster)$units$keys)
   if (length(keys) != 1L || is.null(respondent_key)) {
     .q_fail(
@@ -617,5 +617,5 @@ read_qualtrics <- function(
     )
   }
   roster <- attach_evidence(roster, evidence, diagnostics)
-  join_superdf(roster, data, roster_key, variables, source = response_id)
+  join_studyframe(roster, data, roster_key, variables, source = response_id)
 }

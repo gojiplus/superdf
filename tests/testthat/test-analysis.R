@@ -63,7 +63,7 @@ test_that("blocked cluster experiment reproduces estimatr", {
   expect_equal(result$fit$std.error, direct$std.error)
   expect_equal(result$fit$df, direct$df)
   reordered <- x[rev(seq_len(nrow(x))), ]
-  renamed <- rename_superdf(
+  renamed <- rename_studyframe(
     reordered,
     c(outcome = "outcome measured", school = "school_id")
   )
@@ -80,7 +80,7 @@ test_that("blocked cluster experiment reproduces estimatr", {
 test_that("joining incomplete follow-up preserves randomized units and exposes attrition", {
   skip_if_not_installed("estimatr")
   x <- reference_workflows()$experiment
-  followed <- join_superdf(
+  followed <- join_studyframe(
     x,
     data.frame(id = 2:32, followup = seq_len(31)),
     "id",
@@ -126,7 +126,7 @@ test_that("two-stage SRS with FPC reproduces survey", {
     data = d
   )
   d$weight <- as.numeric(weights(direct))
-  x <- superdf(
+  x <- studyframe(
     d,
     "id",
     "school",
@@ -166,7 +166,7 @@ test_that("two-stage SRS with FPC reproduces survey", {
 test_that("missing codes remain in storage and omission is explicit", {
   skip_if_not_installed("survey")
   d <- data.frame(id = 1:4, y = c(1, 2, -9, 4), w = rep(1, 4))
-  x <- superdf(
+  x <- studyframe(
     d,
     "id",
     "person",
@@ -193,7 +193,7 @@ test_that("unknown and unsupported designs are never silently simplified", {
   skip_if_not_installed("survey")
   d <- data.frame(id = 1:4, y = 1:4, w = rep(1, 4))
   make <- function(stage, adjustments = character()) {
-    superdf(
+    studyframe(
       d,
       "id",
       "person",
@@ -208,7 +208,7 @@ test_that("unknown and unsupported designs are never silently simplified", {
     )
   }
   unknown <- make(sampling_stage("id", method = "srs"))
-  expect_true(validate_superdf(unknown))
+  expect_true(validate_studyframe(unknown))
   expect_error(estimate_mean(unknown, "y", "w"), "replacement must be declared")
   expect_error(
     estimate_mean(
@@ -263,7 +263,7 @@ test_that("FPC fractions and population sizes can differ across stages", {
     weight = rep(4, 8),
     y = seq_len(8)
   )
-  x <- superdf(
+  x <- studyframe(
     d,
     "id",
     "person",
@@ -335,7 +335,7 @@ test_that("standard replicate methods preserve the released variance convention"
       spec$scale <- replicated$scale
       spec$rscales <- as.list(replicated$rscales)
     }
-    x <- superdf(
+    x <- studyframe(
       data,
       "id",
       "pupil",

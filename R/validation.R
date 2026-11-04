@@ -35,6 +35,12 @@
 .assert <- function(ok, message) {
   if (!isTRUE(ok)) stop(message, call. = FALSE)
 }
+.finite_metadata <- function(value) {
+  if (is.list(value)) {
+    return(all(vapply(value, .finite_metadata, logical(1))))
+  }
+  !is.numeric(value) || all(is.finite(value))
+}
 .code_type <- function(value, storage) {
   switch(
     storage,
@@ -193,17 +199,21 @@
 }
 
 #' Validate structure and consistency without certifying an analysis
-#' @param x A superdf.
+#' @param x A studyframe.
 #' @return TRUE invisibly, or an error describing structural inconsistency or an
 #'   unsupported mutation. Estimation adapters separately check sufficiency.
 #' @export
-validate_superdf <- function(x) {
+validate_studyframe <- function(x) {
   ctx <- context(x)
   ref <- attr(x, "reference", exact = TRUE)
   .assert(is.data.frame(ref), "Missing collection roster.")
   .assert(
     identical(attr(x, "seal", exact = TRUE), .seal(.plain(x), ctx, ref)),
-    "Unsupported mutation detected. Use SuperDF operations or explicitly construct a new dataset."
+    "Unsupported mutation detected. Use studyframe operations or explicitly construct a new dataset."
+  )
+  .assert(
+    .finite_metadata(ctx),
+    "Numeric metadata must be finite; use NULL for unknown nullable fields."
   )
   jsonvalidate::json_validate(
     .json(ctx),

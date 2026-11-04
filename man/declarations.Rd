@@ -173,7 +173,7 @@ Rules are conjoined and define the weight's reference sample.}
 \item{conditions}{Two ordered assignment codes: control, treatment.}
 }
 \value{
-A plain list conforming to a component of the SuperDF schema.
+A plain list conforming to a component of the studyframe schema.
 }
 \description{
 Declarations use stable variable identifiers, initially equal to column names.

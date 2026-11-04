@@ -106,17 +106,17 @@
 }
 
 #' Translate an explicitly selected survey specification
-#' @param x A superdf.
+#' @param x A studyframe.
 #' @param weight Identifier of a weight declaration; never chosen implicitly.
 #' @param domain TRUE explicitly interprets a restricted view as a population
 #'   domain. The backend design is constructed on the weight's full applicable
 #'   roster before subsetting. This does not establish that a restriction is ignorable.
-#' @return A survey.design or svyrep.design, with a superdf_analysis attribute.
+#' @return A survey.design or svyrep.design, with a studyframe_analysis attribute.
 #'   Calling survey functions directly uses their own global options; estimate_mean
 #'   applies the declared single-PSU policy and records it.
 #' @export
 as_survey <- function(x, weight, domain = FALSE) {
-  validate_superdf(x)
+  validate_studyframe(x)
   .require("survey")
   ctx <- context(x)
   w <- .choose(ctx$weights, weight, "weight")
@@ -203,7 +203,7 @@ as_survey <- function(x, weight, domain = FALSE) {
       ids <- c(ids, stage$unit)
       stratum <- stage$strata
       if (is.null(stratum)) {
-        stratum <- paste0(".superdf_stratum", i)
+        stratum <- paste0(".studyframe_stratum", i)
         data[[stratum]] <- 1L
       }
       .need(!anyNA(data[[stratum]]), "Sampling strata cannot be missing.")
@@ -257,7 +257,7 @@ as_survey <- function(x, weight, domain = FALSE) {
           )
           population <- f
         }
-        fpc_column <- paste0(".superdf_population", i)
+        fpc_column <- paste0(".studyframe_population", i)
         data[[fpc_column]] <- population
         fpcs <- c(fpcs, fpc_column)
       }
@@ -344,7 +344,7 @@ as_survey <- function(x, weight, domain = FALSE) {
   }
   positions <- match(current_keys, roster_keys[applicable])
   design <- design[positions, ]
-  attr(design, "superdf_analysis") <- list(
+  attr(design, "studyframe_analysis") <- list(
     dataset = ctx$dataset,
     weight = weight,
     domain = restricted,
@@ -363,7 +363,9 @@ as_survey <- function(x, weight, domain = FALSE) {
   analysis$receipt_version <- "0.3.0"
   analysis$input_digest <- attr(x, "seal")
   analysis$digest_method <- "SHA-256 of R serialization version 2"
-  analysis$superdf_version <- as.character(utils::packageVersion("superdf"))
+  analysis$studyframe_version <- as.character(utils::packageVersion(
+    "studyframe"
+  ))
   analysis$r_version <- as.character(getRversion())
   structure(
     list(
@@ -372,7 +374,7 @@ as_survey <- function(x, weight, domain = FALSE) {
       analysis = analysis,
       context = context(x)
     ),
-    class = "superdf_result"
+    class = "studyframe_result"
   )
 }
 
@@ -384,7 +386,7 @@ as_survey <- function(x, weight, domain = FALSE) {
   missing = c("fail", "omit")
 ) {
   missing <- match.arg(missing)
-  validate_superdf(x)
+  validate_studyframe(x)
   .present(x, outcome)
   ctx <- context(x)
   variable <- .choose(ctx$variables, outcome, "outcome")
@@ -410,19 +412,33 @@ as_survey <- function(x, weight, domain = FALSE) {
     category = "choice"
   )
   .need(absent < nrow(x), "Every outcome is missing.")
-  analysis <- attr(design, "superdf_analysis")
+  analysis <- attr(design, "studyframe_analysis")
   analysis$outcome <- outcome
   analysis$missing <- missing
   analysis$missing_rows <- absent
   analysis$used_rows <- nrow(x) - absent
   analysis$design_df <- survey::degf(design)
+  .need(
+    length(analysis$design_df) == 1L &&
+      is.finite(analysis$design_df) &&
+      analysis$design_df > 0,
+    "Student t mean inference requires positive finite design degrees of freedom.",
+    code = "design_df_insufficient",
+    category = "unsupported",
+    path = w$id,
+    sources = .strings(w$evidence),
+    remedy = paste(
+      "Review independent sampling units or replicate-weight rank;",
+      "this adapter cannot form its declared interval for this design."
+    )
+  )
   analysis$estimator <- "svymean"
   analysis$adjust_domain_lonely <- FALSE
   list(design = design, weight = w, analysis = analysis)
 }
 
 .prepare_effect <- function(x, outcome, assignment) {
-  validate_superdf(x)
+  validate_studyframe(x)
   .require("estimatr")
   ctx <- context(x)
   a <- .choose(ctx$assignments, assignment, "assignment")
@@ -550,7 +566,7 @@ as_survey <- function(x, weight, domain = FALSE) {
 }
 
 #' @export
-print.superdf_result <- function(x, ...) {
+print.studyframe_result <- function(x, ...) {
   print(x$fit, ...)
   cat(
     "\nDataset:",

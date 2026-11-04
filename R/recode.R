@@ -1,5 +1,5 @@
 #' Recode values into a new measurement with an explicit mapping
-#' @param x A superdf.
+#' @param x A studyframe.
 #' @param variable A variable_spec for the new measurement.
 #' @param input Stable identifier of the source variable.
 #' @param from Distinct, nonmissing source codes with types compatible with input.
@@ -9,11 +9,11 @@
 #'   Unmapped declared missing codes must retain their missing declarations in
 #'   the new variable when values are kept.
 #' @param description Explanation of the recode. The mapping is also recorded.
-#' @return A new superdf revision. Original measurements and declared design
+#' @return A new studyframe revision. Original measurements and declared design
 #'   variables are preserved. Ordinary NA stays NA; declared numeric missing codes
 #'   are recoded only if the explicit mapping includes them.
 #' @export
-recode_superdf <- function(
+recode_studyframe <- function(
   x,
   variable,
   input,
@@ -22,7 +22,7 @@ recode_superdf <- function(
   unmatched = c("error", "missing", "keep"),
   description
 ) {
-  validate_superdf(x)
+  validate_studyframe(x)
   unmatched <- match.arg(unmatched)
   column <- .col(context(x), input)
   .assert(column %in% names(x), "Recode input must be in the current view.")
@@ -88,5 +88,5 @@ recode_superdf <- function(
     to = .array(to),
     unmatched = unmatched
   )))
-  derive_superdf(x, variable, result, inputs = input, description = detail)
+  derive_studyframe(x, variable, result, inputs = input, description = detail)
 }
