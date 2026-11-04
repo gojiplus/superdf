@@ -152,6 +152,20 @@ replicate-weight inference, blocked cluster randomization, and wave-specific
 weights. Tests compare estimates, standard errors, and degrees of freedom against
 direct backend calls and deliberately break alignment and applicability.
 
+For a stochastic collection-to-inference demonstration, run:
+
+```r
+source(system.file("examples", "simulated_study.R", package = "superdf"))
+run_simulated_study("simulation", repetitions = 500L)
+```
+
+This creates a finite population, samples schools, randomizes treatment, collects
+observed outcomes, joins shuffled records, and writes and reloads a portable bundle
+before analysis. Repeated runs report bias, estimated versus empirical uncertainty,
+and interval coverage against known truth. See the
+[simulation design](https://github.com/soodoku/superdf/blob/main/inst/examples/README.md)
+for the two inferential targets and limitations.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
