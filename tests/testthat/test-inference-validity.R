@@ -54,9 +54,8 @@ test_that("a Student t mean requires positive design degrees of freedom", {
   expect_identical(failed$issues, checked$issues)
 })
 
-test_that("finite zero-uncertainty intervals retain supported backend results", {
+test_that("zero-uncertainty means retain their finite point intervals", {
   skip_if_not_installed("survey")
-  skip_if_not_installed("estimatr")
   x <- studyframe(
     data.frame(id = 1:4, y = 3, w = 1),
     "id",
@@ -75,30 +74,59 @@ test_that("finite zero-uncertainty intervals retain supported backend results", 
     unname(stats::confint(mean$fit, df = mean$analysis$design_df)),
     matrix(c(3, 3), 1)
   )
+})
+
+test_that("paired effect uncertainty agrees with native and analytical results", {
+  skip_if_not_installed("estimatr")
   original <- reference_workflows()$experiment
   ctx <- context(original)
   assignment <- ctx$assignments[[1]]
   assignment$unit <- "id"
   assignment$blocks <- "block"
+  observations <- data.frame(
+    id = 1:8,
+    block = rep(1:4, each = 2),
+    offer = rep(0:1, 4),
+    outcome = c(1, 3, 2, 6, 4, 5, 8, 13)
+  )
   paired <- studyframe(
-    data.frame(
-      id = 1:8,
-      block = rep(1:4, each = 2),
-      offer = rep(0:1, 4),
-      outcome = rep(c(1, 5), 4)
-    ),
+    observations,
     "id",
     "person",
-    "constant_pair_effects",
+    "paired_effects",
     assignments = list(assignment),
     roster = ctx$roster,
     evidence = ctx$evidence
   )
+  direct <- estimatr::difference_in_means(
+    outcome ~ offer,
+    data = observations,
+    blocks = block,
+    condition1 = 0,
+    condition2 = 1
+  )
   effect <- estimate_effect(paired, "outcome", assignment$id)
-  expect_equal(unname(effect$fit$coefficients), 4)
-  expect_equal(unname(effect$fit$std.error), 0)
+  expect_equal(unname(effect$fit$coefficients), 3)
+  expect_equal(unname(effect$fit$std.error), sqrt(5 / 6))
   expect_equal(unname(effect$fit$df), 3)
-  expect_equal(c(effect$fit$conf.low, effect$fit$conf.high), c(4, 4))
+  expect_equal(
+    effect$fit[c(
+      "coefficients",
+      "std.error",
+      "df",
+      "conf.low",
+      "conf.high",
+      "p.value"
+    )],
+    direct[c(
+      "coefficients",
+      "std.error",
+      "df",
+      "conf.low",
+      "conf.high",
+      "p.value"
+    )]
+  )
 })
 
 test_that("finite observations cannot produce a successful nonfinite interval", {

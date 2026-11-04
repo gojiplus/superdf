@@ -22,6 +22,8 @@
 ^.*\.Rcheck$
 ^Makefile$
 ^\.github$
+^_pkgdown\.yml$
+^LICENSE\.md$
 ^docs$
 ^\.codex$
 ^\.cache$
