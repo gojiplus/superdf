@@ -3,21 +3,16 @@
 \docType{package}
 \name{superdf-package}
 \alias{superdf-package}
-\alias{superdf}
-\title{SuperDataFrame: Data Frames with Persistent Metadata}
+\title{Data and the context needed to interpret it}
 \description{
-SuperDataFrame extends R's data.frame to include persistent metadata
-(version, author, notes) that survives data operations and I/O.
-}
-\details{
-SuperDataFrame objects are fully compatible with existing data.frame
-operations while providing additional functionality for data lineage
-and documentation. The metadata is stored as attributes and persists
-through subsetting, combining, and I/O operations.
+SuperDF binds observations, a collection roster, and portable
+declarations. Supported operations update that context. Analysis adapters
+check their own requirements; metadata is not a certificate of identification.
 }
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://soodoku.github.io/superdf/}
   \item \url{https://github.com/soodoku/superdf}
   \item Report bugs at \url{https://github.com/soodoku/superdf/issues}
 }
