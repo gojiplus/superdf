@@ -12,9 +12,9 @@ check their own requirements; metadata is not a certificate of identification.
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://soodoku.github.io/superdf/}
-  \item \url{https://github.com/soodoku/superdf}
-  \item Report bugs at \url{https://github.com/soodoku/superdf/issues}
+  \item \url{https://gojiplus.github.io/superdf/}
+  \item \url{https://github.com/gojiplus/superdf}
+  \item Report bugs at \url{https://github.com/gojiplus/superdf/issues}
 }
 
 }

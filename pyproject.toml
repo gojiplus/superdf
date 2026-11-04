@@ -15,9 +15,9 @@ classifiers = ["Programming Language :: Python :: 3", "Topic :: Scientific/Engin
 dependencies = ["jsonschema>=4.23", "pyarrow>=18"]
 
 [project.urls]
-Homepage = "https://soodoku.github.io/superdf/"
-Repository = "https://github.com/soodoku/superdf"
-Issues = "https://github.com/soodoku/superdf/issues"
+Homepage = "https://gojiplus.github.io/superdf/"
+Repository = "https://github.com/gojiplus/superdf"
+Issues = "https://github.com/gojiplus/superdf/issues"
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.11"]

@@ -206,9 +206,9 @@ Numeric missing codes remain in storage and are converted only for analysis.
 Unsupported dataframe libraries may drop the class or alter its contents; only
 documented studyframe operations provide the preservation contract.
 
-See the [schema and requirements](https://github.com/soodoku/superdf/blob/main/inst/schema/README.md),
-[four reproducible workflows](https://github.com/soodoku/superdf/blob/main/inst/examples/workflows.R), and
-[API documentation](https://soodoku.github.io/superdf/reference/index.html).
+See the [schema and requirements](https://github.com/gojiplus/superdf/blob/main/inst/schema/README.md),
+[four reproducible workflows](https://github.com/gojiplus/superdf/blob/main/inst/examples/workflows.R), and
+[API documentation](https://gojiplus.github.io/superdf/reference/index.html).
 
 ## Development
 
@@ -239,7 +239,7 @@ This creates a finite population, samples schools, randomizes treatment, collect
 observed outcomes, joins shuffled records, and writes and reloads a portable bundle
 before analysis. Repeated runs report bias, estimated versus empirical uncertainty,
 and interval coverage against known truth. See the
-[simulation design](https://github.com/soodoku/superdf/blob/main/inst/examples/README.md)
+[simulation design](https://github.com/gojiplus/superdf/blob/main/inst/examples/README.md)
 for the two inferential targets and limitations.
 
 ## License

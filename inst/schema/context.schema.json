@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://soodoku.github.io/superdf/schema/0.3.0/context.schema.json",
+  "$id": "https://gojiplus.github.io/superdf/schema/0.3.0/context.schema.json",
   "title": "studyframe collection context",
   "type": "object",
   "additionalProperties": false,
