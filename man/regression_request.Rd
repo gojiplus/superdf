@@ -38,6 +38,8 @@ and the interpretation of selection and missingness.}
 }
 \value{
 A portable regression request for check_analysis and run_analysis.
+Scalar fields must be ordinary strings without attributes. Request arrays
+contain plain strings; classed values and matrices are not portable scalars.
 }
 \description{
 This adapter fits unweighted ordinary least squares with an intercept and

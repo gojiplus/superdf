@@ -111,7 +111,7 @@ derive_studyframe <- function(x, variable, values, inputs, description) {
   validate_studyframe(x)
   ctx <- context(x)
   .assert(
-    length(description) == 1L && nzchar(description),
+    rlang::is_string(description) && nzchar(trimws(description)),
     "Describe the derivation."
   )
   .assert(
@@ -179,7 +179,7 @@ join_studyframe <- function(x, y, by, variables, source) {
     "Right-hand join keys must be nonmissing and unique; join would duplicate units."
   )
   .assert(
-    length(source) == 1L && nzchar(source),
+    rlang::is_string(source) && nzchar(trimws(source)),
     "Provide the source of joined measurements."
   )
   added <- setdiff(names(y), by)

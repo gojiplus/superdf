@@ -1,4 +1,9 @@
-.q_fail <- function(code, message, path = "import") {
+.q_fail <- function(
+  code,
+  message,
+  path = "import",
+  call = rlang::caller_env()
+) {
   issue <- analysis_issue(
     code,
     "invalid",
@@ -6,10 +11,12 @@
     message,
     remedy = "Review the export and its instrument snapshot."
   )
-  stop(structure(
-    list(message = message, call = NULL, issues = list(issue)),
-    class = c("studyframe_import_error", "error", "condition")
-  ))
+  cli::cli_abort(
+    "{message}",
+    class = c("studyframe_import_error", "studyframe_error"),
+    issues = list(issue),
+    call = call
+  )
 }
 
 .q_text <- function(value) {
@@ -63,7 +70,7 @@
     })
     known <- vapply(
       decoded,
-      function(x) is.character(x) && length(x) == 1L && nzchar(x),
+      function(x) rlang::is_string(x) && nzchar(x),
       logical(1)
     )
     if (any(known)) {
@@ -297,7 +304,7 @@ read_qualtrics <- function(
   instrument_version = NULL,
   expected_survey_id = NULL
 ) {
-  preview <- match.arg(preview)
+  preview <- rlang::arg_match(preview)
   instrument <- if (is.null(qsf)) {
     NULL
   } else {

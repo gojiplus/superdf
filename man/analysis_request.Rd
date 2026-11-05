@@ -28,6 +28,8 @@ analysis_request(
 }
 \value{
 A plain analysis request. check_analysis validates it against a study.
+Scalar fields must be ordinary strings or logical values without attributes;
+classed values and one-cell matrices are not portable JSON scalars.
 }
 \description{
 Request a supported analysis with explicit design choices

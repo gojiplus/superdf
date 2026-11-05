@@ -20,6 +20,8 @@
 #'   including the justification for independence between observations or clusters
 #'   and the interpretation of selection and missingness.
 #' @return A portable regression request for check_analysis and run_analysis.
+#'   Scalar fields must be ordinary strings without attributes. Request arrays
+#'   contain plain strings; classed values and matrices are not portable scalars.
 #' @seealso [estimatr::lm_robust()]
 #' @export
 regression_request <- function(
@@ -31,7 +33,9 @@ regression_request <- function(
   target,
   assumptions
 ) {
-  if (is.null(se_type)) se_type <- if (is.null(cluster)) "HC2" else "CR2"
+  if (is.null(se_type)) {
+    se_type <- if (is.null(cluster)) "HC2" else "CR2"
+  }
   list(
     kind = "regression",
     outcome = outcome,
@@ -45,33 +49,47 @@ regression_request <- function(
 }
 
 .regression_issue <- function(request) {
-  scalar <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
-  identifier <- function(x) scalar(x) && grepl("^[A-Za-z][A-Za-z0-9_]*$", x)
   array <- function(x, predicate) {
     (is.character(x) || is.list(x)) &&
-      is.null(names(x)) && all(vapply(x, predicate, logical(1)))
+      is.null(attributes(x)) &&
+      all(vapply(x, predicate, logical(1)))
   }
   fields <- c(
-    "kind", "outcome", "predictors", "cluster", "se_type", "missing",
-    "target", "assumptions"
+    "kind",
+    "outcome",
+    "predictors",
+    "cluster",
+    "se_type",
+    "missing",
+    "target",
+    "assumptions"
   )
-  valid <- identical(sort(names(request)), sort(fields)) &&
-    identifier(request$outcome) &&
-    array(request$predictors, identifier) &&
+  valid <- rlang::is_bare_list(request) &&
+    is.null(dim(request)) &&
+    identical(sort(names(request)), sort(fields)) &&
+    .is_identifier(request$outcome) &&
+    array(request$predictors, .is_identifier) &&
     !anyDuplicated(.strings(request$predictors)) &&
     !request$outcome %in% .strings(request$predictors) &&
-    (is.null(request$cluster) || identifier(request$cluster)) &&
-    scalar(request$se_type) &&
-    request$se_type %in% (if (is.null(request$cluster)) "HC2" else c("CR2", "stata")) &&
-    scalar(request$missing) && request$missing %in% c("fail", "omit") &&
-    scalar(request$target) && nzchar(trimws(request$target)) &&
+    (is.null(request$cluster) || .is_identifier(request$cluster)) &&
+    .is_request_string(
+      request$se_type,
+      if (is.null(request$cluster)) "HC2" else c("CR2", "stata")
+    ) &&
+    .is_request_string(request$missing, c("fail", "omit")) &&
+    .is_request_string(request$target) &&
+    nzchar(trimws(request$target)) &&
     length(request$assumptions) > 0L &&
-    array(request$assumptions, function(x) scalar(x) && nzchar(trimws(x)))
+    array(request$assumptions, function(x) {
+      .is_request_string(x) && nzchar(trimws(x))
+    })
   if (isTRUE(valid)) {
     return(NULL)
   }
   analysis_issue(
-    "invalid_request", "invalid", "request",
+    "invalid_request",
+    "invalid",
+    "request",
     paste(
       "Regression requires numeric-variable identifiers, a supported variance",
       "choice, an explicit target and assumptions, and no design-weight or assignment options."
@@ -88,7 +106,8 @@ regression_request <- function(
   .need(
     all(ids %in% registered),
     "A requested regression variable is not registered.",
-    code = "regression_variable_unknown", category = "missing"
+    code = "regression_variable_unknown",
+    category = "missing"
   )
   .present(x, ids)
   reference <- attr(x, "reference")
@@ -98,14 +117,16 @@ regression_request <- function(
   .need(
     all(vapply(data[numeric_ids], is.numeric, logical(1))),
     "Regression outcomes and predictors must be numeric; derive explicit indicators for categories.",
-    code = "regression_type_unsupported", category = "unsupported"
+    code = "regression_type_unsupported",
+    category = "unsupported"
   )
   if (!is.null(request$cluster)) {
     clusters <- data[[request$cluster]]
     .need(
       is.character(clusters) || is.integer(clusters),
       "Cluster identifiers must be character or integer.",
-      code = "regression_cluster_type", category = "unsupported"
+      code = "regression_cluster_type",
+      category = "unsupported"
     )
   }
   complete <- stats::complete.cases(data)
@@ -113,21 +134,27 @@ regression_request <- function(
   .need(
     request$missing == "omit" || absent == 0L,
     "Missing model variables: choose a missing-data policy explicitly.",
-    code = "missing_model_values", category = "choice"
+    code = "missing_model_values",
+    category = "choice"
   )
   data <- data[complete, , drop = FALSE]
   terms <- if (length(predictors)) paste0("`", predictors, "`") else "1"
-  formula <- stats::reformulate(terms, response = paste0("`", request$outcome, "`"))
+  formula <- stats::reformulate(
+    terms,
+    response = paste0("`", request$outcome, "`")
+  )
   design <- stats::model.matrix(stats::reformulate(terms), data = data)
   .need(
     nrow(design) > ncol(design),
     "Regression requires more complete observations than coefficients.",
-    code = "regression_replication_insufficient", category = "unsupported"
+    code = "regression_replication_insufficient",
+    category = "unsupported"
   )
   .need(
     qr(design)$rank == ncol(design),
     "Regression predictors and intercept must have full column rank.",
-    code = "regression_rank_deficient", category = "unsupported"
+    code = "regression_rank_deficient",
+    category = "unsupported"
   )
   cluster_count <- NULL
   args <- list(formula = formula, data = data, se_type = request$se_type)
@@ -136,7 +163,8 @@ regression_request <- function(
     .need(
       cluster_count >= 2L,
       "Clustered regression requires at least two observed clusters.",
-      code = "regression_clusters_insufficient", category = "unsupported"
+      code = "regression_clusters_insufficient",
+      category = "unsupported"
     )
     args$clusters <- as.name(request$cluster)
   }
@@ -175,14 +203,27 @@ regression_request <- function(
   count <- 1L + length(request$predictors)
   finite <- function(x) is.numeric(x) && length(x) == count && all(is.finite(x))
   valid <- all(vapply(
-    list(stats::coef(fit), fit$std.error, fit$df, fit$p.value, fit$conf.low, fit$conf.high),
-    finite, logical(1)
-  )) && all(fit$std.error >= 0) && all(fit$df > 0) &&
-    all(fit$p.value >= 0 & fit$p.value <= 1) && all(fit$conf.low <= fit$conf.high)
+    list(
+      stats::coef(fit),
+      fit$std.error,
+      fit$df,
+      fit$p.value,
+      fit$conf.low,
+      fit$conf.high
+    ),
+    finite,
+    logical(1)
+  )) &&
+    all(fit$std.error >= 0) &&
+    all(fit$df > 0) &&
+    all(fit$p.value >= 0 & fit$p.value <= 1) &&
+    all(fit$conf.low <= fit$conf.high)
   .need(
     valid,
     "The backend could not provide finite estimates and uncertainty for every regression coefficient.",
-    code = "inference_unavailable", category = "unsupported", path = request$outcome,
+    code = "inference_unavailable",
+    category = "unsupported",
+    path = request$outcome,
     remedy = "Review model rank, outcome variation, numerical scale, and independent replication."
   )
   invisible(TRUE)

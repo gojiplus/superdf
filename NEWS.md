@@ -1,3 +1,16 @@
+# studyframe (development version)
+
+* Analysis, import, and consistency-check errors use structured `rlang`/`cli`
+  conditions with a shared `studyframe_error` superclass. Analysis and import
+  issue records retain their codes and metadata; analysis errors retain their
+  underlying causes for debugging.
+* Analysis requests share scalar validation and reject nonportable request
+  containers. Missing-data, preview, and recode policies require exact names;
+  partial policy names no longer select an action implicitly.
+* `regression_request()` supports explicit model-based associations with numeric
+  predictors and HC2 or clustered CR2/`stata` uncertainty. A real Qualtrics
+  example carries collection evidence through the analysis and RMCP handoff.
+
 # studyframe 0.3.0
 
 * Rename the experimental SuperDF package to `studyframe`. The constructor,

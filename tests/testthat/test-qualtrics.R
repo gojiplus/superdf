@@ -285,3 +285,17 @@ test_that("synthetic collection reaches estimatr and a portable bundle", {
   expect_equal(result$analysis$fit$std.error, direct$std.error)
   expect_equal(context(result$study)$roster$kind, "randomized_units")
 })
+test_that("instrument mismatch errors retain machine-readable import issues", {
+  failed <- tryCatch(
+    qualtrics_read(expected_survey_id = "SV_other"),
+    studyframe_error = identity
+  )
+  expect_s3_class(failed, "studyframe_import_error")
+  expect_identical(failed$issues[[1]]$code, "qualtrics_survey_mismatch")
+  expect_identical(failed$issues[[1]]$category, "invalid")
+  expect_identical(conditionCall(failed)[[1]], quote(read_qualtrics))
+  expect_identical(
+    jsonlite::fromJSON(.json(failed$issues), simplifyVector = FALSE),
+    failed$issues
+  )
+})
