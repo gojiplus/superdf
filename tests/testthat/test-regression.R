@@ -3,14 +3,49 @@ regression_study <- function() {
     id = 1:24,
     respondent = rep(1:8, each = 3),
     order = rep(1:3, 8),
-    y = c(3, 6, 4, 5, 4, 9, 2, 8, 7, 6, 2, 3, 8, 5, 9, 4, 3, 8, 2, 7, 6, 6, 5, 7)
+    y = c(
+      3,
+      6,
+      4,
+      5,
+      4,
+      9,
+      2,
+      8,
+      7,
+      6,
+      2,
+      3,
+      8,
+      5,
+      9,
+      4,
+      3,
+      8,
+      2,
+      7,
+      6,
+      6,
+      5,
+      7
+    )
   )
-  studyframe(data, "id", "recall", "recall", roster = roster_spec("received_responses"))
+  studyframe(
+    data,
+    "id",
+    "recall",
+    "recall",
+    roster = roster_spec("received_responses")
+  )
 }
 
 recall_request <- function(cluster = NULL, se_type = NULL, missing = "fail") {
   regression_request(
-    "y", "order", cluster, se_type, missing,
+    "y",
+    "order",
+    cluster,
+    se_type,
+    missing,
     target = "Linear recall-order association among the observed recalls",
     assumptions = c(
       "Respondents are independent; dependence within respondent is allowed when clustered.",
@@ -29,12 +64,24 @@ test_that("regression estimates and uncertainty agree with the native backend", 
     expected <- if (is.null(cluster)) {
       estimatr::lm_robust(y ~ order, data = data, se_type = se)
     } else {
-      estimatr::lm_robust(y ~ order, data = data, clusters = respondent, se_type = se)
+      estimatr::lm_robust(
+        y ~ order,
+        data = data,
+        clusters = respondent,
+        se_type = se
+      )
     }
     checked <- check_analysis(x, request)
     expect_true(checked$ok)
     actual <- run_analysis(x, request)
-    fields <- c("coefficients", "std.error", "df", "p.value", "conf.low", "conf.high")
+    fields <- c(
+      "coefficients",
+      "std.error",
+      "df",
+      "p.value",
+      "conf.low",
+      "conf.high"
+    )
     expect_equal(actual$fit[fields], expected[fields])
     expect_identical(actual$analysis$input_digest, checked$input_digest)
     expect_identical(actual$analysis$request, request)
@@ -43,9 +90,16 @@ test_that("regression estimates and uncertainty agree with the native backend", 
     expect_identical(actual$analysis$se_type, se)
     expect_identical(actual$analysis$roster$kind, "received_responses")
     expect_identical(actual$analysis$used_rows, 24L)
-    expect_identical(actual$analysis$cluster_count, if (is.null(cluster)) NULL else 8L)
+    expect_identical(
+      actual$analysis$cluster_count,
+      if (is.null(cluster)) NULL else 8L
+    )
   }
-  intercept <- regression_request("y", target = "Observed mean", assumptions = "Independent rows")
+  intercept <- regression_request(
+    "y",
+    target = "Observed mean",
+    assumptions = "Independent rows"
+  )
   expect_equal(unname(coef(run_analysis(x, intercept)$fit)), mean(x$y))
 })
 
@@ -55,7 +109,9 @@ test_that("regression checks prepare the model without calling the estimator", {
     lm_robust = function(...) stop("regression estimator was called"),
     .package = "estimatr"
   )
-  expect_true(check_analysis(regression_study(), recall_request("respondent"))$ok)
+  expect_true(
+    check_analysis(regression_study(), recall_request("respondent"))$ok
+  )
 })
 
 test_that("regression requests cannot smuggle formulas or design declarations", {
@@ -107,7 +163,9 @@ test_that("regression omission and restricted views retain the collection histor
   actual <- run_analysis(view, request)
   expected <- estimatr::lm_robust(
     y ~ order,
-    data = data[4:18, ], clusters = respondent, se_type = "CR2"
+    data = data[4:18, ],
+    clusters = respondent,
+    se_type = "CR2"
   )
   expect_equal(coef(actual$fit), coef(expected))
   expect_equal(actual$fit$std.error, expected$std.error)
@@ -138,7 +196,10 @@ test_that("nonestimable regressions fail before fitting", {
   request$predictors <- list("order", "duplicate")
   checked <- check_analysis(rank_deficient, request)
   expect_identical(checked$issues[[1]]$code, "regression_rank_deficient")
-  failed <- tryCatch(run_analysis(rank_deficient, request), studyframe_analysis_error = identity)
+  failed <- tryCatch(
+    run_analysis(rank_deficient, request),
+    studyframe_analysis_error = identity
+  )
   expect_identical(failed$issues, checked$issues)
   request$predictors <- list("absent")
   expect_identical(
@@ -155,7 +216,9 @@ test_that("nonestimable regressions fail before fitting", {
   data$respondent <- as.numeric(data$respondent)
   noninteger_clusters <- studyframe(data, "id", "recall", "cluster")
   expect_identical(
-    check_analysis(noninteger_clusters, recall_request("respondent"))$issues[[1]]$code,
+    check_analysis(noninteger_clusters, recall_request("respondent"))$issues[[
+      1
+    ]]$code,
     "regression_cluster_type"
   )
 })
@@ -165,8 +228,12 @@ test_that("regression refuses nonfinite coefficient inference", {
   local_mocked_bindings(
     lm_robust = function(...) {
       list(
-        coefficients = c(1, 2), std.error = c(0.5, Inf), df = c(6, 6),
-        p.value = c(0.2, 0.2), conf.low = c(0, 0), conf.high = c(2, 4)
+        coefficients = c(1, 2),
+        std.error = c(0.5, Inf),
+        df = c(6, 6),
+        p.value = c(0.2, 0.2),
+        conf.low = c(0, 0),
+        conf.high = c(2, 4)
       )
     },
     .package = "estimatr"
@@ -176,4 +243,70 @@ test_that("regression refuses nonfinite coefficient inference", {
     studyframe_analysis_error = identity
   )
   expect_identical(failed$issues[[1]]$code, "inference_unavailable")
+})
+test_that("regression requests reject shaped containers and accept JSON arrays", {
+  x <- studyframe(
+    data.frame(id = 1:5, y = c(1, 4, 2, 5, 3)),
+    "id",
+    "person",
+    "regression"
+  )
+  request <- regression_request(
+    "y",
+    target = "Association",
+    assumptions = "Independent observations"
+  )
+  invalid <- list(structure(request, class = "data.frame", row.names = 1L))
+  for (value in list(
+    matrix("id", 1L),
+    list(c("id", "y")),
+    list(NA_character_),
+    list(named = "id")
+  )) {
+    candidate <- request
+    candidate$predictors <- value
+    invalid[[length(invalid) + 1L]] <- candidate
+  }
+  for (candidate in invalid) {
+    checked <- check_analysis(x, candidate)
+    expect_identical(checked$ok, FALSE)
+    expect_identical(checked$issues[[1]]$code, "invalid_request")
+  }
+  roundtrip <- jsonlite::fromJSON(.json(request), simplifyVector = FALSE)
+  expect_identical(check_analysis(x, roundtrip)$ok, TRUE)
+})
+
+test_that("regression scalar fields and array elements retain their JSON types", {
+  x <- studyframe(
+    data.frame(id = 1:5, y = c(1, 4, 2, 5, 3)),
+    "id",
+    "person",
+    "regression"
+  )
+  request <- regression_request(
+    "y",
+    cluster = "id",
+    target = "Association",
+    assumptions = "Independent clusters"
+  )
+  for (field in c("outcome", "cluster", "se_type", "missing", "target")) {
+    for (value in list(matrix(request[[field]], 1L), I(request[[field]]))) {
+      candidate <- request
+      candidate[[field]] <- value
+      checked <- check_analysis(x, candidate)
+      expect_identical(checked$ok, FALSE)
+      expect_identical(checked$issues[[1]]$code, "invalid_request")
+    }
+  }
+  for (value in list(
+    list(matrix("Independent clusters", 1L)),
+    list(I("Independent clusters"))
+  )) {
+    candidate <- request
+    candidate$assumptions <- value
+    expect_identical(
+      check_analysis(x, candidate)$issues[[1]]$code,
+      "invalid_request"
+    )
+  }
 })

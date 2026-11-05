@@ -1,7 +1,11 @@
 .unique_ids <- function(records, what) {
   ids <- vapply(records, function(x) x$id, character(1))
   if (anyDuplicated(ids)) {
-    stop("Duplicate ", what, " identifiers.", call. = FALSE)
+    cli::cli_abort(
+      "Duplicate {what} identifiers.",
+      class = c("studyframe_validation_error", "studyframe_error"),
+      call = rlang::caller_env()
+    )
   }
   ids
 }
@@ -32,8 +36,20 @@
   }
   unique(refs)
 }
-.assert <- function(ok, message) {
-  if (!isTRUE(ok)) stop(message, call. = FALSE)
+.assert <- function(ok, message, call = rlang::caller_env()) {
+  if (!isTRUE(ok)) {
+    cli::cli_abort(
+      "{message}",
+      class = c("studyframe_validation_error", "studyframe_error"),
+      call = call
+    )
+  }
+}
+.is_request_string <- function(x, values = NULL) {
+  rlang::is_string(x, values) && is.null(attributes(x))
+}
+.is_identifier <- function(x) {
+  .is_request_string(x) && grepl("^[A-Za-z][A-Za-z0-9_]*$", x)
 }
 .finite_metadata <- function(value) {
   if (is.list(value)) {

@@ -14,6 +14,8 @@ run_analysis(x, request)
 \value{
 A studyframe_result containing the native fit, analysis receipt, and context.
 Failure raises a studyframe_analysis_error condition with structured issues.
+It inherits from studyframe_error; underlying errors are retained as parent
+conditions. Issue records remain plain data suitable for serialization.
 Undefined estimates, uncertainty, or intervals raise an inference_unavailable
 issue instead of returning a successful analysis receipt.
 }

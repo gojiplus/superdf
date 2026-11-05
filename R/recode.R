@@ -23,7 +23,7 @@ recode_studyframe <- function(
   description
 ) {
   validate_studyframe(x)
-  unmatched <- match.arg(unmatched)
+  unmatched <- rlang::arg_match(unmatched)
   column <- .col(context(x), input)
   .assert(column %in% names(x), "Recode input must be in the current view.")
   values <- x[[column]]

@@ -388,7 +388,7 @@ as_survey <- function(x, weight, domain = FALSE) {
   domain = FALSE,
   missing = c("fail", "omit")
 ) {
-  missing <- match.arg(missing)
+  missing <- rlang::arg_match(missing)
   validate_studyframe(x)
   .present(x, outcome)
   ctx <- context(x)

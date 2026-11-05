@@ -25,22 +25,22 @@ analysis_issue <- function(
   )
 }
 
-.analysis_abort <- function(issues) {
+.analysis_abort <- function(issues, parent = NULL, call = rlang::caller_env()) {
   if (!is.null(issues$code)) {
     issues <- list(issues)
   }
-  condition <- structure(
-    list(
-      message = paste(
-        vapply(issues, function(z) z$message, character(1)),
-        collapse = "\n"
-      ),
-      call = NULL,
-      issues = issues
+  messages <- vapply(issues, function(z) z$message, character(1))
+  rlang::abort(
+    c(
+      "Analysis requirements were not met.",
+      stats::setNames(messages, rep("x", length(messages)))
     ),
-    class = c("studyframe_analysis_error", "error", "condition")
+    use_cli_format = FALSE,
+    class = c("studyframe_analysis_error", "studyframe_error"),
+    issues = issues,
+    parent = parent,
+    call = call
   )
-  stop(condition)
 }
 
 .need <- function(
@@ -50,17 +50,21 @@ analysis_issue <- function(
   category = "invalid",
   path = "",
   sources = character(),
-  remedy = "Review the referenced data and design declaration."
+  remedy = "Review the referenced data and design declaration.",
+  call = rlang::caller_env()
 ) {
   if (!isTRUE(ok)) {
-    .analysis_abort(analysis_issue(
-      code,
-      category,
-      path,
-      message,
-      sources,
-      remedy
-    ))
+    .analysis_abort(
+      analysis_issue(
+        code,
+        category,
+        path,
+        message,
+        sources,
+        remedy
+      ),
+      call = call
+    )
   }
 }
 
@@ -72,6 +76,8 @@ analysis_issue <- function(
 #' @param domain TRUE explicitly declares a restricted mean analysis to be a population domain.
 #' @param missing fail or omit for means. Effects require complete numeric outcomes.
 #' @return A plain analysis request. check_analysis validates it against a study.
+#'   Scalar fields must be ordinary strings or logical values without attributes;
+#'   classed values and one-cell matrices are not portable JSON scalars.
 #' @export
 analysis_request <- function(
   kind,
@@ -92,24 +98,20 @@ analysis_request <- function(
 }
 
 .request_issue <- function(request) {
-  if (is.list(request) && identical(request$kind, "regression")) {
+  if (rlang::is_bare_list(request) && identical(request$kind, "regression")) {
     return(.regression_issue(request))
   }
   fields <- c("kind", "outcome", "weight", "assignment", "domain", "missing")
-  scalar <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
-  identifier <- function(x) scalar(x) && grepl("^[A-Za-z][A-Za-z0-9_]*$", x)
-  valid <- is.list(request) &&
+  valid <- rlang::is_bare_list(request) &&
+    is.null(dim(request)) &&
     identical(sort(names(request)), sort(fields)) &&
-    scalar(request$kind) &&
-    request$kind %in% c("mean", "effect") &&
-    identifier(request$outcome) &&
-    is.logical(request$domain) &&
-    length(request$domain) == 1L &&
-    !is.na(request$domain) &&
-    scalar(request$missing) &&
-    request$missing %in% c("fail", "omit") &&
-    (is.null(request$weight) || identifier(request$weight)) &&
-    (is.null(request$assignment) || identifier(request$assignment))
+    .is_request_string(request$kind, c("mean", "effect")) &&
+    .is_identifier(request$outcome) &&
+    rlang::is_bool(request$domain) &&
+    is.null(attributes(request$domain)) &&
+    .is_request_string(request$missing, c("fail", "omit")) &&
+    (is.null(request$weight) || .is_identifier(request$weight)) &&
+    (is.null(request$assignment) || .is_identifier(request$assignment))
   if (!valid) {
     return(analysis_issue(
       "invalid_request",
@@ -158,6 +160,7 @@ analysis_request <- function(
   if (inherits(valid, "error")) {
     return(list(
       ok = FALSE,
+      parent = valid,
       issues = list(analysis_issue(
         "invalid_context",
         "invalid",
@@ -279,11 +282,12 @@ analysis_request <- function(
     error = identity
   )
   if (inherits(prepared, "studyframe_analysis_error")) {
-    return(list(ok = FALSE, issues = prepared$issues))
+    return(list(ok = FALSE, issues = prepared$issues, parent = prepared))
   }
   if (inherits(prepared, "error")) {
     return(list(
       ok = FALSE,
+      parent = prepared,
       issues = list(analysis_issue(
         "backend_preparation_failed",
         "invalid",
@@ -370,13 +374,16 @@ check_analysis <- function(x, request) {
 #' @param request An analysis_request or regression_request.
 #' @return A studyframe_result containing the native fit, analysis receipt, and context.
 #'   Failure raises a studyframe_analysis_error condition with structured issues.
+#'   It inherits from studyframe_error; underlying errors are retained as parent
+#'   conditions. Issue records remain plain data suitable for serialization.
 #'   Undefined estimates, uncertainty, or intervals raise an inference_unavailable
 #'   issue instead of returning a successful analysis receipt.
 #' @export
 run_analysis <- function(x, request) {
+  error_call <- environment()
   checked <- .prepare_request(x, request)
   if (!checked$ok) {
-    .analysis_abort(checked$issues)
+    .analysis_abort(checked$issues, parent = checked$parent)
   }
   prepared <- checked$prepared
   if (request$kind == "mean") {
@@ -401,16 +408,25 @@ run_analysis <- function(x, request) {
       }
     },
     error = function(e) {
-      .analysis_abort(analysis_issue(
-        "backend_estimation_failed",
-        "invalid",
-        "analysis",
-        conditionMessage(e),
-        remedy = "Review outcome variation and backend estimability requirements."
-      ))
+      .analysis_abort(
+        analysis_issue(
+          "backend_estimation_failed",
+          "invalid",
+          "analysis",
+          conditionMessage(e),
+          remedy = "Review outcome variation and backend estimability requirements."
+        ),
+        parent = e,
+        call = error_call
+      )
     }
   )
-  .validate_inference(fit, request, prepared)
+  tryCatch(
+    .validate_inference(fit, request, prepared),
+    studyframe_analysis_error = function(e) {
+      .analysis_abort(e$issues, parent = e, call = error_call)
+    }
+  )
   analysis <- prepared$analysis
   ctx <- context(x)
   analysis$request <- request
@@ -482,7 +498,7 @@ estimate_mean <- function(
       outcome,
       weight = weight,
       domain = domain,
-      missing = match.arg(missing)
+      missing = rlang::arg_match(missing)
     )
   )
 }

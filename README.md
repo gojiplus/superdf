@@ -161,6 +161,18 @@ with the request, input identity, selected declarations, assumptions, omissions,
 and interval convention. A passing check supports execution of the declared
 analysis; it does not verify the study's scientific assertions.
 
+`run_analysis()` raises `studyframe_analysis_error` with an `issues` field when
+requirements fail. Catch that class to inspect the same issue records returned by
+`check_analysis()`; underlying errors are retained in `parent` for debugging.
+Issue records are plain data and can be serialized without the R condition or
+its backtrace. Import errors similarly provide issues under
+`studyframe_import_error`; both inherit from `studyframe_error`.
+
+Request scalar fields must be ordinary strings or logical values. Classed
+scalars and one-cell matrices are rejected because they can change shape during
+JSON serialization. Missing-data, preview, and recode policy names require exact
+matches rather than abbreviations.
+
 For an observational linear model, use `regression_request()` with numeric
 predictor identifiers, an explicit target, and the assumptions supporting the
 analysis. The adapter uses `estimatr::lm_robust()` with HC2 uncertainty for

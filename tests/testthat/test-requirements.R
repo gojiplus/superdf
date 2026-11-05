@@ -252,3 +252,106 @@ test_that("insufficient independent assignment replication is rejected before fi
     "mixed_block_sizes_unsupported"
   )
 })
+test_that("request validation returns portable issues for malformed arguments", {
+  x <- reference_workflows()$survey
+  request <- analysis_request("mean", "income", weight = "main")
+  invalid <- list(
+    NULL,
+    "mean",
+    unname(request),
+    as.data.frame(request[!vapply(request, is.null, logical(1))])
+  )
+  for (value in list(
+    NULL,
+    NA_character_,
+    character(),
+    c("a", "b"),
+    1,
+    "bad id"
+  )) {
+    candidate <- request
+    candidate["outcome"] <- list(value)
+    invalid[[length(invalid) + 1L]] <- candidate
+  }
+  for (value in list(NULL, NA, logical(), c(TRUE, FALSE), 1, "TRUE")) {
+    candidate <- request
+    candidate["domain"] <- list(value)
+    invalid[[length(invalid) + 1L]] <- candidate
+  }
+  for (candidate in invalid) {
+    checked <- check_analysis(x, candidate)
+    expect_identical(checked$ok, FALSE)
+    expect_identical(checked$issues[[1]]$code, "invalid_request")
+    failed <- tryCatch(run_analysis(x, candidate), studyframe_error = identity)
+    expect_identical(failed$issues, checked$issues)
+    expect_identical(conditionCall(failed)[[1]], quote(run_analysis))
+  }
+  roundtrip <- jsonlite::fromJSON(.json(request), simplifyVector = FALSE)
+  expect_identical(check_analysis(x, roundtrip)$ok, TRUE)
+})
+
+test_that("backend failures retain their original condition without leaking it into issue records", {
+  x <- reference_workflows()$survey
+  request <- analysis_request("mean", "income", weight = "main")
+  cause <- rlang::error_cnd(
+    "backend_test_error",
+    message = "Backend {details}.",
+    field = "income"
+  )
+  local_mocked_bindings(
+    svymean = function(...) stop(cause),
+    .package = "survey"
+  )
+  failed <- tryCatch(run_analysis(x, request), studyframe_error = identity)
+  expect_s3_class(failed, "studyframe_analysis_error")
+  expect_identical(failed$parent, cause)
+  expect_identical(conditionCall(failed)[[1]], quote(run_analysis))
+  expect_identical(failed$issues[[1]]$code, "backend_estimation_failed")
+  expect_identical(failed$issues[[1]]$message, "Backend {details}.")
+  expect_identical(
+    jsonlite::fromJSON(.json(failed$issues), simplifyVector = FALSE),
+    failed$issues
+  )
+})
+
+test_that("context and design failures keep causes while checks remain plain data", {
+  x <- reference_workflows()$survey
+  request <- analysis_request("mean", "income", weight = "main")
+  for (candidate in list(x[1:6, ], structure(x, seal = "changed"))) {
+    checked <- check_analysis(candidate, request)
+    failed <- tryCatch(
+      run_analysis(candidate, request),
+      studyframe_error = identity
+    )
+    expect_s3_class(failed$parent, "error")
+    expect_identical(failed$issues, checked$issues)
+    expect_identical(conditionCall(failed)[[1]], quote(run_analysis))
+    expect_named(checked, c("ok", "issues", "request", "input_digest"))
+    expect_identical(
+      jsonlite::fromJSON(.json(checked$issues), simplifyVector = FALSE),
+      checked$issues
+    )
+  }
+})
+
+test_that("analysis failures show collected requirements", {
+  x <- reference_workflows()$survey
+  expect_snapshot(
+    error = TRUE,
+    run_analysis(x, analysis_request("mean", "absent"))
+  )
+})
+
+test_that("scalar request fields cannot change shape during JSON serialization", {
+  x <- reference_workflows()$survey
+  request <- analysis_request("mean", "income", weight = "main")
+  for (field in c("kind", "outcome", "weight", "domain", "missing")) {
+    for (value in list(matrix(request[[field]], 1L), I(request[[field]]))) {
+      candidate <- request
+      candidate[[field]] <- value
+      checked <- check_analysis(x, candidate)
+      expect_identical(checked$ok, FALSE)
+      expect_identical(checked$issues[[1]]$code, "invalid_request")
+    }
+  }
+})
