@@ -68,3 +68,10 @@ of 0.1487 with interval [-3.6657, 3.9630], illustrating the uncertainty of one s
 cluster experiment even when its generating effect is known to the simulator.
 Potential outcomes and that known truth are available only to the simulation's
 scoring code, not to either estimation adapter.
+
+## Real Qualtrics study
+
+[The Extreme Recall example](extreme_recall.md) carries a local response export,
+questionnaire evidence, selection history, and derived measurements through a
+clustered regression and an actual RMCP client. It compares against the original
+analysis code and reports coding sensitivities. Respondent data are not shipped.

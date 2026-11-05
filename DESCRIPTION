@@ -1,6 +1,6 @@
 Package: studyframe
 Title: Data Frames with Collection Context
-Version: 0.3.0
+Version: 0.3.0.9000
 Authors@R: 
     person("Gaurav Sood", 
            email = "contact@gsood.com", 
@@ -8,7 +8,8 @@ Authors@R:
 Description: Binds observations to a collection roster and versioned declarations
     of measurement, sampling, weighting, and assignment. Validates supported data
     operations and translates explicit analysis requests to established survey
-    and experimental estimators. Portable bundles retain data and context together.
+    and experimental estimators, or explicitly model-based linear associations.
+    Portable bundles retain data and context together.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -20,14 +21,21 @@ Imports:
     utils
 Suggests: 
     arrow,
+    dplyr,
     estimatr,
+    fixest,
     knitr,
     lintr,
     pkgload,
     rcmdcheck,
+    readr,
+    readxl,
     roxygen2,
     rmarkdown,
+    scales,
+    stringr,
     survey,
+    tidyr,
     zip,
     testthat (>= 3.1.5)
 Config/testthat/edition: 3

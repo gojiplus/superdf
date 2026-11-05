@@ -24,6 +24,7 @@ reference:
   - title: Check and run an analysis
     contents:
       - analysis_request
+      - regression_request
       - analysis_issue
       - check_analysis
       - run_analysis

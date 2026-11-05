@@ -161,6 +161,15 @@ with the request, input identity, selected declarations, assumptions, omissions,
 and interval convention. A passing check supports execution of the declared
 analysis; it does not verify the study's scientific assertions.
 
+For an observational linear model, use `regression_request()` with numeric
+predictor identifiers, an explicit target, and the assumptions supporting the
+analysis. The adapter uses `estimatr::lm_robust()` with HC2 uncertainty for
+unclustered observations or CR2/`stata` uncertainty for declared clusters. It
+records the selected observations, joint missingness exclusions, clustering, and
+model assumptions. Its coefficients describe associations; this route does not
+certify causal identification or population representativeness, and it does not
+apply sampling weights.
+
 ## Start with a Qualtrics export
 
 ```r
@@ -188,6 +197,7 @@ types, a complete executable example, and composition with `qualtRics` downloads
 | Survey analysis | Numeric means; explicit weight, wave, domain, and missing-data policies |
 | Assignment | Two-condition complete randomization, including blocks and clusters, with constant declared assignment probability |
 | Experimental analysis | `estimatr::difference_in_means()` on a complete roster and complete numeric outcomes |
+| Regression | Unweighted numeric linear models with an intercept; HC2 or clustered CR2/`stata` uncertainty, explicit target and assumptions |
 | Measurement | Definitions, units, category labels, named missingness codes, measurement occasion |
 | Portability | Primitive integer, double, string, and boolean columns; one current table and its attached roster |
 

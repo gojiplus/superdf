@@ -9,11 +9,11 @@ check_analysis(x, request)
 \arguments{
 \item{x}{A studyframe.}
 
-\item{request}{An analysis_request.}
+\item{request}{An analysis_request or regression_request.}
 }
 \value{
 A list with ok, issues, request, and input_digest. Survey designs may be
-constructed, but no mean or effect estimator is called. Scientific assertions
+constructed, but no outcome estimator is called. Scientific assertions
 remain assertions even when the request passes.
 }
 \description{

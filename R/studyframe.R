@@ -83,8 +83,13 @@
   result
 }
 .seal <- function(data, context, reference) {
+  columns <- function(table) {
+    lapply(table, function(column) {
+      if (is.character(column)) enc2utf8(column) else column
+    })
+  }
   digest::digest(
-    list(lapply(data, identity), context, lapply(reference, identity)),
+    list(columns(data), context, columns(reference)),
     algo = "sha256",
     serializeVersion = 2
   )
