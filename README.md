@@ -13,13 +13,9 @@ observational units, measurements, sampling, weights, assignment, and derivation
 An analysis selects the relevant declarations and checks its requirements before
 calling an established statistical package.
 
-This is an experimental, breaking revision of the original metadata-only package.
-It implements a bounded schema and tested adapters, not a complete scientific
-metadata standard. A well-formed declaration does not establish that its scientific
-claims or identification assumptions are true.
-
-The R package is now named **studyframe**, formerly SuperDF. The GitHub repository
-currently retains its original name. This development revision is not on CRAN.
+studyframe is an experimental R package with a bounded schema and tested analysis
+adapters. It is not yet on CRAN. A well-formed declaration does not establish that
+its scientific claims or identification assumptions are true.
 
 ## Install the R package
 
@@ -43,8 +39,7 @@ install.packages(c("survey", "estimatr", "arrow", "zip"))
 
 The [collection-to-inference vignette](vignettes/collection-to-inference.Rmd)
 executes a complete simulated handoff. Schema 0.3 and `.studyframe` bundles are
-experimental; this rename does not provide compatibility aliases for the earlier
-unreleased API or bundle format.
+experimental and may change before a stable release.
 
 ## Declare once, use across analyses
 
