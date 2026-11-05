@@ -85,7 +85,13 @@ test_that("evidence identities and variable instrument references are preserved"
   conflict$sha256 <- strrep("c", 64)
   expect_error(attach_evidence(x, list(conflict)), "Conflicting evidence")
   expect_error(
-    studyframe(d, "id", "person", "duplicates", evidence = list(first, conflict)),
+    studyframe(
+      d,
+      "id",
+      "person",
+      "duplicates",
+      evidence = list(first, conflict)
+    ),
     "Duplicate evidence"
   )
   expect_error(

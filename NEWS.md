@@ -14,6 +14,8 @@
 * Recode measurements with explicit mappings and preserve declared missing-code
   semantics when retaining unmapped values.
 * Match numeric join keys exactly, including distinct doubles that print alike.
+* Preserve valid empty views and their attached collection rosters through filtering
+  and portable bundle round trips.
 * Reject nonfinite numeric metadata before JSON serialization and refuse
   undefined inferential results instead of reporting them as successful analyses.
 * Include an executable R vignette and shared R/Python producer conformance cases.

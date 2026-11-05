@@ -19,6 +19,19 @@ test_that("every reference workflow round trips with its roster and context", {
   }
 })
 
+test_that("empty views round trip with the full collection roster", {
+  skip_if_not_installed("arrow")
+  skip_if_not_installed("zip")
+  x <- reference_workflows()$survey[FALSE, ]
+  f <- tempfile(fileext = ".studyframe")
+  on.exit(unlink(f), add = TRUE)
+  write_studyframe(x, f)
+  back <- read_studyframe(f)
+  expect_identical(as.data.frame(back), as.data.frame(x))
+  expect_identical(collection_data(back), collection_data(x))
+  expect_equal(context(back), context(x))
+})
+
 test_that("bundle corruption and untracked entries are refused", {
   skip_if_not_installed("arrow")
   skip_if_not_installed("zip")

@@ -1,5 +1,10 @@
 test_that("schema and semantic validation distinguish incomplete from inconsistent", {
-  x <- studyframe(data.frame(id = 1:3, y = c(1, NA, 3)), "id", "person", "unknown")
+  x <- studyframe(
+    data.frame(id = 1:3, y = c(1, NA, 3)),
+    "id",
+    "person",
+    "unknown"
+  )
   expect_true(validate_studyframe(x))
   expect_length(context(x)$sampling, 0)
   expect_identical(context(x)$variables[[2]]$status, "unknown")
@@ -76,6 +81,32 @@ test_that("views preserve rosters and bindings require one compatible collection
   )
 })
 
+test_that("empty views retain valid keys and their collection roster", {
+  x <- studyframe(
+    data.frame(id = 1:3, wave = rep("first", 3), y = 4:6),
+    c("id", "wave"),
+    "person",
+    "empty_view"
+  )
+  empty <- x[FALSE, ]
+  expect_equal(nrow(empty), 0L)
+  expect_true(validate_studyframe(empty))
+  expect_identical(collection_data(empty), collection_data(x))
+  expect_equal(as.data.frame(rbind(empty, x)), as.data.frame(x))
+  fresh <- studyframe(
+    data.frame(id = integer(), wave = character(), y = integer()),
+    c("id", "wave"),
+    "person",
+    "empty_collection"
+  )
+  expect_true(validate_studyframe(fresh))
+  expect_equal(nrow(collection_data(fresh)), 0L)
+  expect_error(
+    studyframe(data.frame(id = numeric()), "id", "person", "invalid_keys"),
+    "nonmissing character or integer"
+  )
+})
+
 test_that("derived variables retain definitions without overwriting collection facts", {
   x <- reference_workflows()$survey
   view <- x[1:6, ]
@@ -90,7 +121,13 @@ test_that("derived variables retain definitions without overwriting collection f
   expect_true(all(is.na(collection_data(y)$annual_income[-(1:6)])))
   expect_equal(tail(context(y)$history, 1)[[1]]$operation, "derive")
   expect_error(
-    derive_studyframe(x, variable_spec("income"), x$income, "income", "Overwrite"),
+    derive_studyframe(
+      x,
+      variable_spec("income"),
+      x$income,
+      "income",
+      "Overwrite"
+    ),
     "new variable"
   )
 })

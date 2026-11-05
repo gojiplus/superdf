@@ -70,6 +70,9 @@
         call. = FALSE
       )
     }
+    if (!length(v)) {
+      return(character())
+    }
     v <- enc2utf8(as.character(v))
     paste0(nchar(v, type = "bytes"), ":", v)
   })
@@ -228,7 +231,12 @@ collection_data <- function(x) {
 }
 
 #' @export
-as.data.frame.studyframe <- function(x, row.names = NULL, optional = FALSE, ...) {
+as.data.frame.studyframe <- function(
+  x,
+  row.names = NULL,
+  optional = FALSE,
+  ...
+) {
   .plain(x)
 }
 
