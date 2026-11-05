@@ -362,7 +362,10 @@ as_survey <- function(x, weight, domain = FALSE) {
 .analysis_result <- function(fit, x, analysis) {
   analysis$receipt_version <- "0.3.0"
   analysis$input_digest <- attr(x, "seal")
-  analysis$digest_method <- "SHA-256 of R serialization version 2"
+  analysis$digest_method <- paste(
+    "SHA-256 of R serialization version 2;",
+    "character columns normalized to UTF-8"
+  )
   analysis$studyframe_version <- as.character(utils::packageVersion(
     "studyframe"
   ))

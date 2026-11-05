@@ -9,7 +9,7 @@ run_analysis(x, request)
 \arguments{
 \item{x}{A studyframe.}
 
-\item{request}{An analysis_request.}
+\item{request}{An analysis_request or regression_request.}
 }
 \value{
 A studyframe_result containing the native fit, analysis receipt, and context.

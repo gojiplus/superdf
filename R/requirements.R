@@ -92,6 +92,9 @@ analysis_request <- function(
 }
 
 .request_issue <- function(request) {
+  if (is.list(request) && identical(request$kind, "regression")) {
+    return(.regression_issue(request))
+  }
   fields <- c("kind", "outcome", "weight", "assignment", "domain", "missing")
   scalar <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
   identifier <- function(x) scalar(x) && grepl("^[A-Za-z][A-Za-z0-9_]*$", x)
@@ -211,6 +214,8 @@ analysis_request <- function(
       )
     }
     backend <- "survey"
+  } else if (request$kind == "regression") {
+    backend <- "estimatr"
   } else {
     ids <- vapply(ctx$assignments, function(a) a$id, character(1))
     if (is.null(request$assignment) || !request$assignment %in% ids) {
@@ -264,6 +269,8 @@ analysis_request <- function(
           request$domain,
           request$missing
         )
+      } else if (request$kind == "regression") {
+        .prepare_regression(x, request)
       } else {
         .prepare_effect(x, request$outcome, request$assignment)
       }
@@ -291,9 +298,9 @@ analysis_request <- function(
 
 #' Check requirements without fitting an outcome model
 #' @param x A studyframe.
-#' @param request An analysis_request.
+#' @param request An analysis_request or regression_request.
 #' @return A list with ok, issues, request, and input_digest. Survey designs may be
-#'   constructed, but no mean or effect estimator is called. Scientific assertions
+#'   constructed, but no outcome estimator is called. Scientific assertions
 #'   remain assertions even when the request passes.
 #' @export
 check_analysis <- function(x, request) {
@@ -307,6 +314,9 @@ check_analysis <- function(x, request) {
 }
 
 .validate_inference <- function(fit, request, prepared) {
+  if (request$kind == "regression") {
+    return(.validate_regression_inference(fit, request))
+  }
   scalar <- function(value) {
     is.numeric(value) && length(value) == 1L && is.finite(value)
   }
@@ -357,7 +367,7 @@ check_analysis <- function(x, request) {
 
 #' Fit a supported request after preparing its declared design
 #' @param x A studyframe.
-#' @param request An analysis_request.
+#' @param request An analysis_request or regression_request.
 #' @return A studyframe_result containing the native fit, analysis receipt, and context.
 #'   Failure raises a studyframe_analysis_error condition with structured issues.
 #'   Undefined estimates, uncertainty, or intervals raise an inference_unavailable
@@ -384,6 +394,8 @@ run_analysis <- function(x, request) {
           prepared$design,
           na.rm = request$missing == "omit"
         )
+      } else if (request$kind == "regression") {
+        do.call(estimatr::lm_robust, prepared$args)
       } else {
         do.call(estimatr::difference_in_means, prepared$args)
       }
@@ -422,6 +434,9 @@ run_analysis <- function(x, request) {
     } else {
       analysis$selected_design$population
     }
+  } else if (request$kind == "regression") {
+    analysis$selected_weight <- NULL
+    analysis$selected_design <- NULL
   } else {
     analysis$selected_weight <- NULL
     analysis$selected_design <- .choose(

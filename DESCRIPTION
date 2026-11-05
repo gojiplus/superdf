@@ -1,6 +1,6 @@
 Package: studyframe
 Title: Data Frames with Collection Context
-Version: 0.3.0
+Version: 0.3.0.9000
 Authors@R: 
     person("Gaurav Sood", 
            email = "contact@gsood.com", 
