@@ -1,5 +1,13 @@
 # studyframe: data with collection context
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/gojiplus/superdf/actions/workflows/R-CMD-check.yml/badge.svg?branch=main)](https://github.com/gojiplus/superdf/actions/workflows/R-CMD-check.yml)
+[![R development checks](https://github.com/gojiplus/superdf/actions/workflows/development.yml/badge.svg?branch=main)](https://github.com/gojiplus/superdf/actions/workflows/development.yml)
+[![GitHub release](https://img.shields.io/github/v/release/gojiplus/superdf?include_prereleases&label=GitHub%20release)](https://github.com/gojiplus/superdf/releases)
+[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://gojiplus.github.io/superdf/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
+<!-- badges: end -->
+
 studyframe keeps observations together with the information needed to interpret them:
 observational units, measurements, sampling, weights, assignment, and derivations.
 An analysis selects the relevant declarations and checks its requirements before
