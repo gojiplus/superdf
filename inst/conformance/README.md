@@ -1,7 +1,8 @@
 # Producer conformance example
 
 The portable interface is the bundle and its versioned JSON schema. A producer
-does not need to import the R or Python studyframe package to create one.
+does not need to import studyframe to create one. This repository ships an R
+package; the Python file here is a standalone producer example.
 
 `producer.py` uses PyArrow and Python's standard library to write eight synthetic
 observations, a matching roster, the hand-authored `context.json`, and a manifest
@@ -9,6 +10,7 @@ with SHA-256 hashes of the three payloads. Its protocol is illustrative; neither
 the fixture nor its evidence hash establishes that a real randomization occurred.
 
 ```sh
+python -m pip install pyarrow
 python inst/conformance/producer.py example.studyframe
 ```
 
@@ -28,25 +30,24 @@ result <- run_analysis(study, request)
 result$fit
 ```
 
-Validate the same bundle in Python:
-
-```python
-from studyframe import read_studyframe
-
-study = read_studyframe("example.studyframe")
-study.validate()
-```
-
-`cases.json` supplies shared positive and negative cases. Tests mutate the context
-before writing, so every case has a valid integrity manifest. The R and Python
-readers must agree on structural validity: unknown evidence references, duplicate
+`cases.json` supplies positive and negative cases. The producer mutates the
+context before writing, so every case has a valid integrity manifest. The R
+reader checks structural validity: unknown evidence references, duplicate
 evidence IDs, incompatible roster scope, and unsupported schema versions fail.
 Unknown instrument versions remain valid. A received-response roster and a planned
 assignment are valid metadata but cannot satisfy the requested effect analysis.
-The Python reader checks structure; R checks and executes supported inference.
+R checks and executes supported inference.
 
-Run the cross-language tests from the repository with `pytest
-python/tests/test_conformance.py`. They require R's development dependencies as
-well as the Python development environment. These fixtures cover the bounded
-profile implemented here; they do not certify arbitrary survey designs or vendor
-exports.
+The generated bundles are checked into `tests/testthat/fixtures/conformance/`.
+`make test` reads them in R without launching Python or installing Python
+dependencies. The fixture provenance records the producer and Arrow versions.
+To regenerate candidates for review, use a new directory:
+
+```sh
+python inst/conformance/producer.py --cases /path/to/new-fixture-directory
+```
+
+Review the generated payloads before replacing the checked-in fixtures. These
+fixtures cover the bounded profile implemented here; they do not certify
+arbitrary survey designs or vendor exports. This is a producer example and an R
+reader check, not a maintained Python reader or a Python distribution.

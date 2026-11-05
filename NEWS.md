@@ -1,5 +1,9 @@
 # studyframe (development version)
 
+* Focus this repository on the R package. Preserve the earlier Python reader on
+  `archive/python-reader`; remove its distribution, dependencies, and test suite
+  from the active build. Independent-producer bundle fixtures retain an
+  interoperability check in the R tests without requiring Python.
 * Analysis, import, and consistency-check errors use structured `rlang`/`cli`
   conditions with a shared `studyframe_error` superclass. Analysis and import
   issue records retain their codes and metadata; analysis errors retain their

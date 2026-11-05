@@ -2,4 +2,4 @@ linters: linters_with_defaults(
     line_length_linter(120L),
     object_name_linter = NULL
   )
-exclusions: list("python", "build", "dist", "docs")
+exclusions: list("build", "dist", "docs")

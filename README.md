@@ -128,22 +128,15 @@ overwrite an existing destination. RDS also preserves the R object, but the bund
 is the cross-language format. Bare data extraction is explicit:
 `as.data.frame(study)` removes context.
 
-The Python reader uses the same schema and validates references and row alignment:
+This repository ships the R package. The bundle format and JSON schema remain
+language-independent. The [producer example](inst/conformance/README.md) writes
+bundles with PyArrow and Python's standard library, without importing studyframe.
+R tests read small checked-in bundles from that producer and verify both accepted
+and rejected cases. Running the R package's tests does not require Python.
 
-```python
-from studyframe import read_studyframe
-
-study = read_studyframe("study.studyframe")
-study.validate()
-observations = study.data.to_pandas()
-print(study.context["weights"])
-```
-
-Python currently reads and validates bundles; it does not provide analysis or
-transformation adapters. The schema is packaged from the R package's single source.
-
-The [producer conformance kit](inst/conformance/README.md) builds a bundle using
-only Arrow and JSON. Both language readers run the same positive and negative cases.
+The earlier Python reader is preserved on
+[`archive/python-reader`](https://github.com/gojiplus/superdf/tree/archive/python-reader).
+It is deferred work, outside this package's build and release process.
 
 ## Check a request before fitting
 
@@ -236,14 +229,13 @@ See the [schema and requirements](https://github.com/gojiplus/superdf/blob/main/
 
 ```sh
 Rscript -e 'pak::local_install_dev_deps()'
-uv sync --extra dev
 make ci
 ```
 
-`make ci` runs R and Python linting, statistical reference tests, actual R-to-Python
-bundle tests, `R CMD check`, and a Python package build. `make document` regenerates
-the R reference documentation. The README is the package website's main page.
-`make format` uses [Air](https://posit-dev.github.io/air/) for R and Ruff for Python.
+`make ci` runs R linting, statistical and bundle-conformance tests, `R CMD check`,
+and an R source-package build. `make document` regenerates the R reference
+documentation. The README is the package website's main page. `make format` uses
+[Air](https://posit-dev.github.io/air/) for R.
 
 The four deterministic workflows cover stratified cluster sampling and domains,
 replicate-weight inference, blocked cluster randomization, and wave-specific
