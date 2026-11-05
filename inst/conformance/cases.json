@@ -1,0 +1,174 @@
+[
+  {
+    "name": "supported",
+    "valid": true,
+    "analysis_ok": true,
+    "patch": []
+  },
+  {
+    "name": "unknown_source",
+    "valid": false,
+    "patch": [
+      {
+        "path": [
+          "variables",
+          2,
+          "evidence"
+        ],
+        "value": [
+          "absent"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "duplicate_source_id",
+    "valid": false,
+    "patch": [
+      {
+        "path": [
+          "evidence"
+        ],
+        "value": [
+          {
+            "id": "protocol",
+            "uri": "protocol.txt",
+            "sha256": "184a24a0a39a1c3debc5a4090a439b2fcbf4c372e9c72dd7e5ae176c99f4feda",
+            "producer": "studyframe conformance example",
+            "captured_at": null,
+            "version": "1",
+            "description": "Synthetic assignment protocol"
+          },
+          {
+            "id": "protocol",
+            "uri": "protocol.txt",
+            "sha256": "184a24a0a39a1c3debc5a4090a439b2fcbf4c372e9c72dd7e5ae176c99f4feda",
+            "producer": "studyframe conformance example",
+            "captured_at": null,
+            "version": "1",
+            "description": "Synthetic assignment protocol"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "wrong_roster_scope",
+    "valid": false,
+    "patch": [
+      {
+        "path": [
+          "roster",
+          "scope"
+        ],
+        "value": "absent"
+      }
+    ]
+  },
+  {
+    "name": "response_only",
+    "valid": true,
+    "analysis_ok": false,
+    "patch": [
+      {
+        "path": [
+          "roster"
+        ],
+        "value": {
+          "kind": "received_responses",
+          "source": "Response export",
+          "completeness": "unknown",
+          "scope": null,
+          "evidence": [
+            "protocol"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "name": "planned_assignment",
+    "valid": true,
+    "analysis_ok": false,
+    "patch": [
+      {
+        "path": [
+          "assignments",
+          0,
+          "phase"
+        ],
+        "value": "planned"
+      }
+    ]
+  },
+  {
+    "name": "unknown_instrument_version",
+    "valid": true,
+    "analysis_ok": true,
+    "patch": [
+      {
+        "path": [
+          "evidence",
+          0,
+          "version"
+        ],
+        "value": null
+      },
+      {
+        "path": [
+          "variables",
+          2,
+          "instrument"
+        ],
+        "value": {
+          "source": "protocol",
+          "question": "QID1",
+          "subquestion": null
+        }
+      }
+    ]
+  },
+  {
+    "name": "unknown_instrument_source",
+    "valid": false,
+    "patch": [
+      {
+        "path": [
+          "variables",
+          2,
+          "instrument"
+        ],
+        "value": {
+          "source": "absent",
+          "question": "QID1",
+          "subquestion": null
+        }
+      }
+    ]
+  },
+  {
+    "name": "unsourced_complete_roster",
+    "valid": false,
+    "patch": [
+      {
+        "path": [
+          "roster",
+          "source"
+        ],
+        "value": " "
+      }
+    ]
+  },
+  {
+    "name": "unknown_schema",
+    "valid": false,
+    "patch": [
+      {
+        "path": [
+          "schema_version"
+        ],
+        "value": "9000"
+      }
+    ]
+  }
+]

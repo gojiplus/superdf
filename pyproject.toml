@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "studyframe"
+version = "0.3.0"
+description = "Read data and collection context from studyframe bundles"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Gaurav Sood", email = "contact@gsood.com" }]
+keywords = ["metadata", "survey", "research", "provenance"]
+classifiers = ["Programming Language :: Python :: 3", "Topic :: Scientific/Engineering"]
+dependencies = ["jsonschema>=4.23", "pyarrow>=18"]
+
+[project.urls]
+Homepage = "https://gojiplus.github.io/superdf/"
+Repository = "https://github.com/gojiplus/superdf"
+Issues = "https://github.com/gojiplus/superdf/issues"
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.11"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/studyframe"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"inst/schema/context.schema.json" = "studyframe/context.schema.json"
+
+[tool.pytest.ini_options]
+testpaths = ["python/tests"]
+pythonpath = ["python"]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

@@ -1,0 +1,122 @@
+---
+title: "From collection to inference"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{From collection to inference}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(studyframe)
+has_backends <- all(vapply(
+  c("arrow", "zip", "estimatr"), requireNamespace, logical(1), quietly = TRUE
+))
+```
+
+`studyframe` keeps observations connected to the collection facts needed for a
+requested analysis. Sampling, treatment assignment, measurement, and analyst
+choices are separate declarations. An analysis checks the declarations it needs;
+it does not infer a collection design from the pattern of observed responses.
+
+## Begin with what is known
+
+A received response table supplies observations, but does not establish who was
+invited, sampled, or randomized:
+
+```{r response-table}
+responses <- studyframe(
+  data.frame(id = 1:4, score = c(10, 12, 8, 15)),
+  keys = "id", unit = "person", dataset_id = "received_responses"
+)
+context(responses)$roster
+request <- analysis_request("effect", "score", assignment = "offer_assignment")
+requirements <- check_analysis(responses, request)
+requirements$ok
+vapply(requirements$issues, function(issue) issue$code, character(1))
+```
+
+Those requirements identify the missing assignment declaration and complete
+randomized roster. Adding labels or observing balanced treatment groups would not
+supply either fact. A missing backend package is reported separately as a
+dependency issue.
+
+## Collect outcomes against an external roster
+
+The package includes an executable synthetic collection workflow. It creates
+40 stable unit IDs, assigns exactly 20 to treatment by uniform shuffle, saves the
+assignment roster, and generates outcomes with a true additive treatment effect
+of 2. It then writes a vendor-shaped instrument and response export, shuffles the
+response rows, imports them by key, writes a bundle and codebook, and reads the
+bundle into a fresh object before estimation.
+
+The example is simulated and requires `arrow`, `zip`, and `estimatr`. It uses no
+account credentials or private respondent records.
+
+```{r collect, eval=has_backends}
+source(system.file("examples", "qualtrics_workflow.R", package = "studyframe"))
+handoff <- run_qualtrics_workflow(tempfile("collection-"))
+study <- handoff$study
+c(observed = nrow(study), roster = nrow(collection_data(study)))
+context(study)$roster
+```
+
+For an actual collection, retain the external roster and stable unit IDs before
+fielding. Capture the collection-time QSF instrument and its hash; a later export
+can describe a different draft. `read_qualtrics()` can reconcile supported response
+fields to that roster. It preserves nonrespondents with missing outcomes and
+refuses attempted overwrites of authoritative assignment fields. The current
+effect adapter requires complete outcomes, so nonresponse blocks this analysis.
+
+## Check, then estimate
+
+```{r inference, eval=has_backends}
+request <- analysis_request("effect", "QID1", assignment = "offer_assignment")
+requirements <- check_analysis(study, request)
+stopifnot(requirements$ok)
+result <- run_analysis(study, request)
+c(
+  estimate = unname(result$fit$coefficients),
+  standard_error = unname(result$fit$std.error),
+  lower = unname(result$fit$conf.low),
+  upper = unname(result$fit$conf.high)
+)
+result$analysis$confidence_interval
+```
+
+Checking prepares the design without fitting the outcome estimator. Running the
+request repeats validation and delegates estimation to `estimatr`. The estimate
+targets the effect on the declared randomized roster, without using sampling
+weights to extrapolate to an external population. Sampling-weighted means use a
+separate request and the `survey` package.
+
+A passing check establishes that the declared design is supported. It cannot
+certify that randomization occurred or that an external completeness assertion is
+true. Numerical degeneracy can still prevent estimation; such failures return a
+structured condition rather than a successful result with undefined uncertainty.
+
+## Carry the handoff forward
+
+```{r handoff, eval=has_backends}
+received <- read_studyframe(handoff$bundle)
+stopifnot(identical(as.data.frame(received), as.data.frame(study)))
+result$analysis$receipt_version
+result$analysis$assumptions
+```
+
+The bundle contains the current table, attached collection roster, versioned
+context, and integrity hashes. Source evidence records point to external
+artifacts; the source artifacts themselves are not embedded. Hashes check artifact
+identity, not the truth of scientific claims.
+
+Supported selection, rename, derivation, recoding, and keyed joins preserve the
+relationship between measurements and declarations. A filtered view still carries
+and exports its full roster. To create a restricted release, construct a new
+dataset and reconsider its declarations. `as.data.frame()` explicitly extracts a
+plain table without the attached context.
+
+The returned result keeps the native backend fit with an analysis receipt recording
+the request, input identity, selected design, evidence, assumptions, and interval
+convention. This is the information another analyst or agent needs to inspect the
+analysis without reconstructing the collection from a detached codebook.

@@ -1,4 +1,36 @@
-url: https://soodoku.github.io/superdf/
+url: https://gojiplus.github.io/superdf/
 
 template:
   bootstrap: 5
+
+reference:
+  - title: Construct and describe a study
+    contents:
+      - studyframe
+      - declarations
+      - roster_spec
+      - evidence_spec
+      - instrument_ref
+      - attach_evidence
+      - context
+      - validate_studyframe
+  - title: Import and prepare measurements
+    contents:
+      - read_qualtrics
+      - rename_studyframe
+      - derive_studyframe
+      - recode_studyframe
+      - join_studyframe
+  - title: Check and run an analysis
+    contents:
+      - analysis_request
+      - analysis_issue
+      - check_analysis
+      - run_analysis
+      - estimate_mean
+      - estimate_effect
+      - as_survey
+  - title: Share data and context
+    contents:
+      - bundles
+      - write_codebook

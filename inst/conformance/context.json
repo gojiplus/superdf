@@ -1,0 +1,110 @@
+{
+  "schema_version": "0.3.0",
+  "dataset": {
+    "id": "independent_producer",
+    "version": "1",
+    "author": "studyframe conformance example",
+    "notes": "Synthetic producer fixture"
+  },
+  "units": {
+    "observation": "person",
+    "keys": [
+      "id"
+    ]
+  },
+  "variables": [
+    {
+      "id": "id",
+      "column": "id",
+      "storage": "integer",
+      "label": "Unit identifier",
+      "units": null,
+      "categories": [],
+      "missing": [],
+      "wave": null,
+      "source": "Conformance fixture",
+      "status": "documented",
+      "evidence": [
+        "protocol"
+      ],
+      "instrument": null
+    },
+    {
+      "id": "z",
+      "column": "z",
+      "storage": "integer",
+      "label": "Assignment condition",
+      "units": null,
+      "categories": [],
+      "missing": [],
+      "wave": null,
+      "source": "Conformance fixture",
+      "status": "documented",
+      "evidence": [
+        "protocol"
+      ],
+      "instrument": null
+    },
+    {
+      "id": "y",
+      "column": "y",
+      "storage": "number",
+      "label": "Observed outcome",
+      "units": null,
+      "categories": [],
+      "missing": [],
+      "wave": null,
+      "source": "Conformance fixture",
+      "status": "documented",
+      "evidence": [
+        "protocol"
+      ],
+      "instrument": null
+    }
+  ],
+  "sampling": [],
+  "weights": [],
+  "assignments": [
+    {
+      "id": "trial",
+      "state": "known",
+      "treatment": "z",
+      "unit": "id",
+      "blocks": null,
+      "mechanism": "complete",
+      "prob": 0.5,
+      "conditions": [
+        0,
+        1
+      ],
+      "source": "Illustrative assignment protocol",
+      "status": "documented",
+      "evidence": [
+        "protocol"
+      ],
+      "phase": "realized"
+    }
+  ],
+  "history": [],
+  "roster": {
+    "kind": "randomized_units",
+    "source": "Illustrative complete assignment roster",
+    "completeness": "asserted_complete",
+    "scope": "trial",
+    "evidence": [
+      "protocol"
+    ]
+  },
+  "evidence": [
+    {
+      "id": "protocol",
+      "uri": "protocol.txt",
+      "sha256": "184a24a0a39a1c3debc5a4090a439b2fcbf4c372e9c72dd7e5ae176c99f4feda",
+      "producer": "studyframe conformance example",
+      "captured_at": null,
+      "version": "1",
+      "description": "Synthetic assignment protocol"
+    }
+  ],
+  "diagnostics": []
+}

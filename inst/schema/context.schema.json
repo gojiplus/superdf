@@ -1,0 +1,938 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://gojiplus.github.io/superdf/schema/0.3.0/context.schema.json",
+  "title": "studyframe collection context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "dataset",
+    "units",
+    "variables",
+    "sampling",
+    "weights",
+    "assignments",
+    "history",
+    "roster",
+    "evidence",
+    "diagnostics"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.3.0"
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "author",
+        "notes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observation",
+        "keys"
+      ],
+      "properties": {
+        "observation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/variable"
+      },
+      "minItems": 1
+    },
+    "sampling": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/sampling"
+      },
+      "minItems": 0
+    },
+    "weights": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/weight"
+      },
+      "minItems": 0
+    },
+    "assignments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/assignment"
+      },
+      "minItems": 0
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/history"
+      },
+      "minItems": 0
+    },
+    "roster": {
+      "$ref": "#/definitions/roster"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/evidence"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/issue"
+      }
+    }
+  },
+  "definitions": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+    },
+    "scalar": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "variable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "column",
+        "storage",
+        "label",
+        "units",
+        "categories",
+        "missing",
+        "wave",
+        "source",
+        "status",
+        "evidence",
+        "instrument"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "column": {
+          "type": "string",
+          "minLength": 1
+        },
+        "storage": {
+          "enum": [
+            "integer",
+            "number",
+            "string",
+            "boolean"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "units": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "label"
+            ],
+            "properties": {
+              "value": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "label": {
+                "type": "string"
+              }
+            }
+          },
+          "minItems": 0
+        },
+        "missing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "reason"
+            ],
+            "properties": {
+              "value": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "reason": {
+                "enum": [
+                  "not_asked",
+                  "inapplicable",
+                  "refused",
+                  "dont_know",
+                  "attrition",
+                  "invalid",
+                  "other"
+                ]
+              }
+            }
+          },
+          "minItems": 0
+        },
+        "wave": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "documented",
+            "assumed",
+            "unknown"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "instrument": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/instrument"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit",
+        "strata",
+        "replacement",
+        "method",
+        "probability",
+        "fpc"
+      ],
+      "properties": {
+        "unit": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "strata": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replacement": {
+          "enum": [
+            "with",
+            "without",
+            "unknown"
+          ]
+        },
+        "method": {
+          "enum": [
+            "srs",
+            "pps",
+            "unknown"
+          ]
+        },
+        "probability": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fpc": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "variable",
+                "kind"
+              ],
+              "properties": {
+                "variable": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                },
+                "kind": {
+                  "enum": [
+                    "population_size",
+                    "sampling_fraction"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "sampling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "state",
+        "population",
+        "stages",
+        "source",
+        "status",
+        "evidence",
+        "phase"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "state": {
+          "enum": [
+            "known",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "population": {
+          "type": "string"
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/stage"
+          },
+          "minItems": 0
+        },
+        "source": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "documented",
+            "assumed",
+            "unknown"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "phase": {
+          "enum": [
+            "planned",
+            "realized"
+          ]
+        }
+      }
+    },
+    "variance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "replicates",
+        "combined",
+        "scale",
+        "rscales",
+        "mse",
+        "rho",
+        "lonely_psu"
+      ],
+      "properties": {
+        "method": {
+          "enum": [
+            "taylor",
+            "BRR",
+            "Fay",
+            "JK1",
+            "JKn",
+            "bootstrap",
+            "other"
+          ]
+        },
+        "replicates": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "combined": {
+          "type": "boolean"
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rscales": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "minItems": 0
+        },
+        "mse": {
+          "type": "boolean"
+        },
+        "rho": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "exclusiveMaximum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lonely_psu": {
+          "enum": [
+            "fail",
+            "certainty",
+            "adjust",
+            "average",
+            "remove"
+          ]
+        }
+      }
+    },
+    "weight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "variable",
+        "sampling",
+        "role",
+        "waves",
+        "applies",
+        "adjustments",
+        "variance",
+        "source",
+        "status",
+        "evidence",
+        "phase"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "variable": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "sampling": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "role": {
+          "enum": [
+            "base",
+            "final",
+            "analysis"
+          ]
+        },
+        "waves": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "applies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "variable",
+              "values"
+            ],
+            "properties": {
+              "variable": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean"
+                  ]
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              }
+            }
+          },
+          "minItems": 0
+        },
+        "adjustments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0
+        },
+        "variance": {
+          "$ref": "#/definitions/variance"
+        },
+        "source": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "documented",
+            "assumed",
+            "unknown"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "phase": {
+          "enum": [
+            "planned",
+            "realized"
+          ]
+        }
+      }
+    },
+    "assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "state",
+        "treatment",
+        "unit",
+        "blocks",
+        "mechanism",
+        "prob",
+        "conditions",
+        "source",
+        "status",
+        "evidence",
+        "phase"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "state": {
+          "enum": [
+            "known",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "treatment": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "unit": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "blocks": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mechanism": {
+          "enum": [
+            "complete",
+            "bernoulli",
+            "unknown"
+          ]
+        },
+        "prob": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "exclusiveMaximum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "source": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "documented",
+            "assumed",
+            "unknown"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "phase": {
+          "enum": [
+            "planned",
+            "realized"
+          ]
+        }
+      }
+    },
+    "history": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "details",
+        "rows_before",
+        "rows_after",
+        "parents",
+        "inputs",
+        "outputs"
+      ],
+      "properties": {
+        "operation": {
+          "type": "string"
+        },
+        "details": {
+          "type": "string"
+        },
+        "rows_before": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rows_after": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parents": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "minItems": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "minItems": 0
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "minItems": 0
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "uri",
+        "sha256",
+        "producer",
+        "captured_at",
+        "version",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "uri": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "producer": {
+          "type": "string"
+        },
+        "captured_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "roster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "source",
+        "completeness",
+        "scope",
+        "evidence"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "unknown",
+            "received_responses",
+            "invited_units",
+            "sampled_units",
+            "randomized_units"
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "completeness": {
+          "enum": [
+            "unknown",
+            "partial",
+            "asserted_complete"
+          ]
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "instrument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "question",
+        "subquestion"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/definitions/id"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subquestion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "category",
+        "path",
+        "message",
+        "sources",
+        "remedy"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "enum": [
+            "invalid",
+            "missing",
+            "choice",
+            "unsupported",
+            "dependency"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/id"
+          },
+          "uniqueItems": true
+        },
+        "remedy": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

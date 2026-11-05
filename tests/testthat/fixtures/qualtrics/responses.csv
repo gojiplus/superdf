@@ -1,0 +1,7 @@
+ResponseId,id,Status,Finished,outcome,recommend,first,second
+Response ID,External unit ID,Response type,Finished,Outcome score,Would you recommend?,Comments First,Comments Second
+"{""ImportId"":""_recordId""}","{""ImportId"":""embeddedData-id""}","{""ImportId"":""status""}","{""ImportId"":""finished""}","{""ImportId"":""QID1""}","{""ImportId"":""QID2""}","{""ImportId"":""QID3_1""}","{""ImportId"":""QID3_2""}"
+R_2,2,0,1,12,1,b,
+R_4,4,0,0,,0,,d
+R_1,1,0,1,10,0,a,c
+R_3,3,0,1,15,1,c,e

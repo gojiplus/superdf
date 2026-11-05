@@ -1,23 +1,37 @@
-Package: superdf
-Title: Data Frames with Persistent Metadata
-Version: 0.1.0
+Package: studyframe
+Title: Data Frames with Collection Context
+Version: 0.3.0
 Authors@R: 
     person("Gaurav Sood", 
            email = "contact@gsood.com", 
            role = c("aut", "cre"))
-Description: Extends R's data.frame to include persistent metadata (version, 
-    author, notes) that survives data operations and input/output. SuperDataFrame
-    objects are fully compatible with existing data.frame operations while 
-    providing additional functionality for data lineage and documentation.
+Description: Binds observations to a collection roster and versioned declarations
+    of measurement, sampling, weighting, and assignment. Validates supported data
+    operations and translates explicit analysis requests to established survey
+    and experimental estimators. Portable bundles retain data and context together.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Imports: 
+    digest,
+    jsonlite,
+    jsonvalidate,
+    stats,
     utils
 Suggests: 
-    dplyr,
+    arrow,
+    estimatr,
+    knitr,
+    lintr,
+    pkgload,
+    rcmdcheck,
+    roxygen2,
+    rmarkdown,
+    survey,
+    zip,
     testthat (>= 3.1.5)
 Config/testthat/edition: 3
-URL: https://github.com/soodoku/superdf
-BugReports: https://github.com/soodoku/superdf/issues
+VignetteBuilder: knitr
+URL: https://gojiplus.github.io/superdf/, https://github.com/gojiplus/superdf
+BugReports: https://github.com/gojiplus/superdf/issues
 Config/roxygen2/version: 8.0.0

@@ -1,9 +1,21 @@
 
 .DS_Store
-/superdf.Rcheck
+/studyframe.Rcheck
 *.gz
 
 
 # pkgdown output. Disposable local build product; CI builds and
 # publishes the definitive site.
 /docs/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.py[cod]
+/dist/
+/build/
+*.Rcheck/
+.Rhistory
+.RData
+.lintr_cache/
+.cache/

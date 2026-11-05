@@ -1,0 +1,1 @@
+Synthetic conformance fixture: eight units, two conditions, four units per condition. The example declares complete randomization; these illustrative rows do not independently prove that claim.
