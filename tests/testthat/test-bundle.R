@@ -19,6 +19,31 @@ test_that("every reference workflow round trips with its roster and context", {
   }
 })
 
+test_that("writing non-ASCII responses preserves the original object's validity", {
+  skip_if_not_installed("arrow")
+  skip_if_not_installed("zip")
+  skip_if_not(l10n_info()[["UTF-8"]])
+  response <- rawToChar(as.raw(c(99, 97, 102, 195, 169)))
+  expect_identical(Encoding(response), "unknown")
+  x <- studyframe(
+    data.frame(id = 1L, response = response),
+    "id", "person", "text-response"
+  )
+  f <- tempfile(fileext = ".studyframe")
+  on.exit(unlink(f), add = TRUE)
+  write_studyframe(x, f)
+  expect_true(validate_studyframe(x))
+  back <- read_studyframe(f)
+  expect_identical(as.data.frame(back), as.data.frame(x))
+  expect_identical(collection_data(back), collection_data(x))
+  expect_identical(context(back), context(x))
+  forged <- x
+  class(forged) <- "data.frame"
+  forged$response <- "changed"
+  class(forged) <- c("studyframe", "data.frame")
+  expect_error(validate_studyframe(forged), "Unsupported mutation")
+})
+
 test_that("empty views round trip with the full collection roster", {
   skip_if_not_installed("arrow")
   skip_if_not_installed("zip")
