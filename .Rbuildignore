@@ -9,8 +9,6 @@
 ^studyframe\.Rmd$
 ^CLAUDE\.md$
 ^python$
-^pyproject\.toml$
-^uv\.lock$
 ^\.venv$
 ^\.pytest_cache$
 ^\.ruff_cache$

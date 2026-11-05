@@ -5,9 +5,9 @@ inferences they support. studyframe carries facts and assumptions with data; ana
 requests determine which declarations are needed. Structural validity, consistency
 with observations, and sufficiency for a particular analysis are separate checks.
 
-`context.schema.json` is the authoritative Draft 7 JSON Schema. The R and Python
-packages consume this same file. The current version is experimental; no migration
-or backward-compatibility layer is provided.
+`context.schema.json` is the authoritative Draft 7 JSON Schema, shipped with the R
+package and available to independent producers. The current version is experimental;
+no migration or backward-compatibility layer is provided.
 
 ## Requirements and precedents
 
@@ -20,7 +20,7 @@ or backward-compatibility layer is provided.
 | Assignment mechanism, blocks, assignment units and probabilities | [randomizr::declare_ra](https://declaredesign.org/r/randomizr/reference/declare_ra.html) | Complete randomization counts checked on original assignment units |
 | Supported experimental estimators | [estimatr::difference_in_means](https://declaredesign.org/r/estimatr/reference/difference_in_means.html) | Blocked cluster reference test; attrition refusal |
 | Measurement meaning, collection history and unknowns | [DDI product overview](https://ddialliance.org/product_overview) | Variable declarations, named missing codes and source/status fields |
-| Separate data, design and analysis while keeping them bound | [Python svy](https://svylab.com/docs/svy/getting_started.html) | Portable schema independently validated by Python |
+| Separate data, design and analysis while keeping them bound | [Python svy](https://svylab.com/docs/svy/getting_started.html) | Language-independent schema and bundles from an independent producer read by R |
 | Weight applicability depends on analysis wave and sample | [ANES guide](https://electionstudies.org/wp-content/uploads/2026/04/anes_timeseries_2024_userguidecodebook_accessible_html.html) | Synthetic two-wave fixture; no ANES data or inferred ANES declarations are shipped |
 
 This is informed by DDI terminology, not a claim of DDI conformance. Existing
